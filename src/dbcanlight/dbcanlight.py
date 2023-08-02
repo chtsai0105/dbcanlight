@@ -76,7 +76,7 @@ def cazyme_finder(input, output, evalue, coverage, **kwargs):
         out = output
     else:
         out = Path(output) / "cazymes.tsv"
-    writer(results, out, header.substrate)
+    writer(results, out, header.hmmsearch)
 
 
 def substrate_finder(input, output, evalue, coverage, **kwargs):
