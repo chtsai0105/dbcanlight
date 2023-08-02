@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0", "biopython>=1.79", "pyhmmer>=0.8.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dbcanLight"
+authors = [
+  { name="Cheng-Hung Tsai", email="chenghung.tsai@email.ucr.edu" },
+]
+description = "A lightweight rewrite of run_dbcan"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dynamic = ["version"]
+
+[project.scripts]
+dbcanLight = "dbcanlight.dbcanlight:main"
+dbcanLight-hmmparser = "dbcanlight.hmmsearch_parser:main"
+dbcanLight-subparser = "dbcanlight.substrate_parser:main"
+
+[project.urls]
+"Homepage" = "https://github.com/chtsai0105/dbcanLight"
+"Bug Tracker" = "https://github.com/chtsai0105/dbcanLight/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "dbcanlight.__version__"}

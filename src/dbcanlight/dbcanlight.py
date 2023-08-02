@@ -6,9 +6,10 @@ import sys
 from pathlib import Path
 
 import pyhmmer
-from hmmsearch_parser import overlap_filter
-from substrate_parser import substrate_mapping
-from utils import header, writer
+from .hmmsearch_parser import overlap_filter
+from .substrate_parser import substrate_mapping
+from .utils import header, writer
+from ._version import __version__
 
 
 class hmmsearch_module:
@@ -115,6 +116,7 @@ def main():
     parser.add_argument("-c", "--coverage", type=float, default=0.35, help="Reporting coverage cutoff (default=0.35)")
     parser.add_argument("-t", "--threads", type=int, default=1, help="Total number of cpus allowed to use")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
+    parser.add_argument("-V", "--version", action="version", version=__version__)
 
     args = parser.parse_args()
 
@@ -135,7 +137,6 @@ def main():
 
 
 main.__name__ = "dbcanLight"
-main.__version__ = "0.5"
 main._epilog = """
 run_dbcan rewrite by Cheng-Hung Tsai chenghung.tsai[at]email.ucr.edu
 """

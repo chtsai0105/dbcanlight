@@ -8,7 +8,8 @@ from operator import itemgetter
 from pathlib import Path
 
 from Bio import SearchIO
-from utils import header, writer
+from .utils import header, writer
+from ._version import __version__
 
 
 class hmmsearch_parser:
@@ -124,6 +125,7 @@ def main():
     parser.add_argument("-e", "--evalue", type=float, default=1e-15, help="Reporting evalue cutoff (default=1e-15)")
     parser.add_argument("-c", "--coverage", type=float, default=0.35, help="Reporting coverage cutoff (default=0.35)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
+    parser.add_argument("-V", "--version", action="version", version=__version__)
 
     args = parser.parse_args()
 
@@ -147,7 +149,7 @@ def main():
     writer(results, out, header.substrate)
 
 
-main.__name__ = "hmmsearch_parser"
+main.__name__ = "dbcanLight-hmmparser"
 
 if __name__ == "__main__":
     main()

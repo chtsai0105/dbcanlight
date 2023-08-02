@@ -7,7 +7,8 @@ import sys
 import textwrap
 from pathlib import Path
 
-from utils import header, writer
+from .utils import header, writer
+from ._version import __version__
 
 subs_dict = {}
 with open("/srv/projects/db/CAZY/CAZyDB/v11.0/fam-substrate-mapping-08252022.tsv", "r") as f:
@@ -85,6 +86,7 @@ def main():
     parser.add_argument("-i", "--input", type=Path, required=True, help="dbcan-sub searching output in dbcan format")
     parser.add_argument("-o", "--output", default=sys.stdout, help="Output file path (default=stdout)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
+    parser.add_argument("-V", "--version", action="version", version=__version__)
 
     args = parser.parse_args()
 
@@ -107,7 +109,7 @@ def main():
         writer(results, out, header.substrate)
 
 
-main.__name__ = "substrate_parser"
+main.__name__ = "dbcanLight-subparser"
 
 
 if __name__ == "__main__":
