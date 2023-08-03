@@ -1,5 +1,3 @@
-from hashlib import md5
-
 from dbcanlight.dbcanlight import cazyme_finder, substrate_finder
 
 input = "tests/example.faa"

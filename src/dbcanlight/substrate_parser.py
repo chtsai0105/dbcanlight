@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import argparse
 import csv
 import logging
@@ -21,7 +23,7 @@ with open(Path.home() / ".dbcanlight/substrate_mapping.tsv", "r") as f:
             subs_dict[line[2], "-"] = subs
 
 
-def substrate_mapping(filtered_results):
+def substrate_mapping(filtered_results: list) -> list:
     results = []
     for line in filtered_results:
         subfam = None

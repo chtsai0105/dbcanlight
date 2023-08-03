@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import argparse
 import csv
 import logging
@@ -8,12 +10,13 @@ from operator import itemgetter
 from pathlib import Path
 
 from Bio import SearchIO
-from .utils import header, writer
+
 from ._version import __version__
+from .utils import header, writer
 
 
 class hmmsearch_parser:
-    def __init__(self, input):
+    def __init__(self, input: str):
         try:
             self._input = self._hmmer_reader(input)
             logging.info("Input is in hmmer3 format")
@@ -24,7 +27,7 @@ class hmmsearch_parser:
             self._dbcanformat = True
             self._input = csv.reader(f, delimiter="\t")
 
-    def _hmmer_reader(self, input):
+    def _hmmer_reader(self, input: str) -> list:
         lines = []
         with open(input, "r") as f:
             for hmm in SearchIO.parse(f, "hmmsearch3-domtab"):
@@ -47,7 +50,7 @@ class hmmsearch_parser:
                         )
         return lines
 
-    def eval_cov_filter(self, evalue, coverage):
+    def eval_cov_filter(self, evalue: float, coverage: float) -> dict[list]:
         results = {}
         for line in self._input:
             if self._dbcanformat:
@@ -61,7 +64,7 @@ class hmmsearch_parser:
         return results
 
 
-def overlap_filter(results: dict[list]):
+def overlap_filter(results: dict[list]) -> list:
     filtered_results = []
     for gene in sorted(results.keys()):
         hits = results[gene]
@@ -119,7 +122,7 @@ def main():
         description=textwrap.dedent(main.__doc__),
     )
     parser.add_argument(
-        "-i", "--input", type=Path, required=True, help="CAZyme searching output in dbcan or hmmsearch format"
+        "-i", "--input", type=str, required=True, help="CAZyme searching output in dbcan or hmmsearch format"
     )
     parser.add_argument("-o", "--output", default=sys.stdout, help="Output file path (default=stdout)")
     parser.add_argument("-e", "--evalue", type=float, default=1e-15, help="Reporting evalue cutoff (default=1e-15)")

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import argparse
 import logging
 import textwrap
@@ -13,11 +15,11 @@ from ._version import __version__
 
 
 class hmmsearch_module:
-    def __init__(self, faa_file, hmm_file):
+    def __init__(self, faa_file: Path, hmm_file: Path):
         self._faa = faa_file
         self._hmm_file = hmm_file
 
-    def _load_input(self):
+    def _load_input(self) -> None:
         seq_file = pyhmmer.easel.SequenceFile(self._faa, digital=True)
         self._sequences = seq_file.read_block()
         self._kh = pyhmmer.easel.KeyHash()
@@ -66,12 +68,12 @@ class hmmsearch_module:
         logging.info(f"Found {len(results)} genes have hits")
         return results
 
-    def run(self, evalue, coverage):
+    def run(self, evalue: float, coverage: float) -> dict[list]:
         self._load_input()
         return self._run_hmmsearch(self._sequences, evalue, coverage)
 
 
-def cazyme_finder(input, output, evalue, coverage, **kwargs):
+def cazyme_finder(input: str, output, evalue: float, coverage: float, **kwargs):
     hmm_file = Path.home() / ".dbcanlight/cazyme.hmm"
     finder = hmmsearch_module(Path(input), hmm_file)
     results = finder.run(evalue=evalue, coverage=coverage)
@@ -85,7 +87,7 @@ def cazyme_finder(input, output, evalue, coverage, **kwargs):
     writer(results, out, header.hmmsearch)
 
 
-def substrate_finder(input, output, evalue, coverage, **kwargs):
+def substrate_finder(input: str, output, evalue: float, coverage: float, **kwargs):
     hmm_file = Path.home() / ".dbcanlight/substrate.hmm"
     finder = hmmsearch_module(Path(input), hmm_file)
     results = finder.run(evalue=evalue, coverage=coverage)
@@ -117,7 +119,7 @@ def main():
         description=textwrap.dedent(main.__doc__),
         epilog=textwrap.dedent(main._epilog),
     )
-    parser.add_argument("-i", "--input", type=Path, required=True, help="Protein fasta")
+    parser.add_argument("-i", "--input", type=str, required=True, help="Protein fasta")
     parser.add_argument("-o", "--output", default=sys.stdout, help="Output directory (default=stdout)")
     parser.add_argument("-m", "--mode", choices=["cazyme", "sub"], required=True, help="mode")
     parser.add_argument("-e", "--evalue", type=float, default=1e-15, help="Reporting evalue cutoff (default=1e-15)")
