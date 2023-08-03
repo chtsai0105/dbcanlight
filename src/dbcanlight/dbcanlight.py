@@ -79,7 +79,9 @@ def cazyme_finder(input, output, evalue, coverage, **kwargs):
     if output == sys.stdout:
         out = output
     else:
-        out = Path(output) / "cazymes.tsv"
+        out = Path(output)
+        out.mkdir(parents=True, exist_ok=True)
+        out = out / "cazymes.tsv"
     writer(results, out, header.hmmsearch)
 
 
@@ -92,7 +94,9 @@ def substrate_finder(input, output, evalue, coverage, **kwargs):
     if output == sys.stdout:
         out = output
     else:
-        out = Path(output) / "substrates.tsv"
+        out = Path(output)
+        out.mkdir(parents=True, exist_ok=True)
+        out = out / "substrates.tsv"
     writer(results, out, header.substrate)
 
 
