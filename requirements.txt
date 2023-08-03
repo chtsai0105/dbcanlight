@@ -1,0 +1,2 @@
+biopython>=1.79
+pyhmmer>=0.8.1
