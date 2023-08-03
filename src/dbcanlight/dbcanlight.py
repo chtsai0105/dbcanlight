@@ -25,12 +25,16 @@ class hmmsearch_module:
             self._kh.add(seq.name)
 
         f = pyhmmer.plan7.HMMFile(self._hmm_file)
-        self._hmms = f.optimized_profiles()
+        if f.is_pressed():
+            self._hmms = f.optimized_profiles()
+        else:
+            self._hmms = list(f)
 
         self._hmms_length = {}
         for hmm in self._hmms:
             self._hmms_length[hmm.name.decode()] = hmm.M
-        self._hmms.rewind()
+        if f.is_pressed():
+            self._hmms.rewind()
 
     def _run_hmmsearch(self, sequences, evalue, coverage) -> dict[list]:
         results = {}
@@ -68,7 +72,7 @@ class hmmsearch_module:
 
 
 def cazyme_finder(input, output, evalue, coverage, **kwargs):
-    hmm_file = Path("/bigdata/operations/pkgadmin/srv/projects/db/CAZY/CAZyDB/v11.0/dbCAN.txt")
+    hmm_file = Path.home() / ".dbcanlight/cazyme.hmm"
     finder = hmmsearch_module(Path(input), hmm_file)
     results = finder.run(evalue=evalue, coverage=coverage)
     results = overlap_filter(results)
@@ -80,7 +84,7 @@ def cazyme_finder(input, output, evalue, coverage, **kwargs):
 
 
 def substrate_finder(input, output, evalue, coverage, **kwargs):
-    hmm_file = Path("/bigdata/operations/pkgadmin/srv/projects/db/CAZY/CAZyDB/v11.0/dbCAN_sub.hmm")
+    hmm_file = Path.home() / ".dbcanlight/substrate.hmm"
     finder = hmmsearch_module(Path(input), hmm_file)
     results = finder.run(evalue=evalue, coverage=coverage)
     results = overlap_filter(results)

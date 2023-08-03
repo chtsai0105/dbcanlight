@@ -31,6 +31,12 @@ jobs:
     - name: Install package
       run: |
         pip install .
+    - name: Get external data
+      run: |
+        mkdir -p ~/.dbcanlight
+        curl -o ~/.dbcanlight/substrate_mapping.tsv http://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv
+        curl -o ~/.dbcanlight/cazyme.hmm https://bcb.unl.edu/dbCAN2/download/Databases/V11/dbCAN-HMMdb-V11.txt
+        curl -o ~/.dbcanlight/substrate.hmm http://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm
     - name: Test with pytest
       run: |
         conda install pytest

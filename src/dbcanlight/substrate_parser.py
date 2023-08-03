@@ -11,7 +11,7 @@ from .utils import header, writer
 from ._version import __version__
 
 subs_dict = {}
-with open("/srv/projects/db/CAZY/CAZyDB/v11.0/fam-substrate-mapping-08252022.tsv", "r") as f:
+with open(Path.home() / ".dbcanlight/substrate_mapping.tsv", "r") as f:
     next(f)
     for line in csv.reader(f, delimiter="\t"):
         subs = set(re.split(r",[\s]|,", re.sub(r",[\s]and|[\s]and", ",", line[0])))
