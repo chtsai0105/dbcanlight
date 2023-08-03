@@ -1,5 +1,7 @@
 
 ![Conda](https://github.com/chtsai0105/dbcanLight/actions/workflows/conda-building-check.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11-blue)
+
 
 # dbcanLight
 A lightweight rewrite of [run_dbcan] for better multithreading performance.
@@ -117,6 +119,9 @@ curl -o $HOME/.dbcanlight/substrate_mapping.tsv https://bcb.unl.edu/dbCAN2/downl
 curl -o $HOME/.dbcanlight/cazyme.hmm https://bcb.unl.edu/dbCAN2/download/Databases/V11/dbCAN-HMMdb-V11.txt
 curl -o $HOME/.dbcanlight/substrate.hmm https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm
 ```
+
+## Notes
+Although the hmmscan and hmmsearch is doing the same thing, the results may differ a bit since the evalue would be affected by the size of the database.
 
 [run_dbcan]: https://github.com/linnabrown/run_dbcan
 [hmmscan_vs_hmmsearch]: http://cryptogenomicon.org/hmmscan-vs-hmmsearch-speed-the-numerology.html
