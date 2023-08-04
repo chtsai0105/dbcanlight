@@ -1,5 +1,8 @@
 [build-system]
-requires = ["setuptools>=61.0", "biopython>=1.79", "pyhmmer>=0.8.1"]
+requires = [
+  "setuptools>=61.0",
+  "pytest>=6.0",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -15,7 +18,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dynamic = ["version"]
+dynamic = ["version", "dependencies"]
 
 [project.scripts]
 dbcanLight = "dbcanlight.dbcanlight:main"
@@ -28,3 +31,11 @@ dbcanLight-subparser = "dbcanlight.substrate_parser:main"
 
 [tool.setuptools.dynamic]
 version = {attr = "dbcanlight.__version__"}
+dependencies = {file = ["requirements.txt"]}
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+  "tests",
+]
