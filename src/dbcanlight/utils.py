@@ -28,6 +28,8 @@ def writer(results, output, header=[]):
         out = open(output, "w")
         if len(header) == len(results[0]):
             print("\t".join([str(x) for x in header]), file=out)
+        else:
+            raise Exception("The length of results and header is not consistent")
     else:
         out = output
     for line in results:
