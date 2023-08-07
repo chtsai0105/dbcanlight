@@ -77,7 +77,7 @@ options:
   -v, --verbose         Verbose mode for debug
 ```
 
-Say we have a file **hmmsearch.out** that come from hmmsearch with --domtblout enabled.
+Say we have a file **hmmsearch.out** that come from hmmsearch with `--domtblout` enabled.
 We can filter the results by:
 ```
 python3 hmmsearch_parser.py -i hmmsearch.out
@@ -101,9 +101,9 @@ options:
 - [Biopython]
 - [pyhmmer]
 
-Use the env.yaml to install all the required packages
+Use the environment.yml to install all the required packages
 ```
-conda env create -f env.yaml
+conda env create -f environment.yml
 ```
 
 Install the package through pip
@@ -114,14 +114,14 @@ pip install .
 
 <a name="required_data"></a>Please also download the required hmm profile databases and the substrate mapping table with the following cmds:
 ```
-mkdir -p $HOME/.dbcanlight
-curl -o $HOME/.dbcanlight/substrate_mapping.tsv https://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv
-curl -o $HOME/.dbcanlight/cazyme.hmm https://bcb.unl.edu/dbCAN2/download/Databases/V11/dbCAN-HMMdb-V11.txt
+mkdir -p $HOME/.dbcanlight && \
+curl -o $HOME/.dbcanlight/substrate_mapping.tsv https://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv && \
+curl -o $HOME/.dbcanlight/cazyme.hmm https://bcb.unl.edu/dbCAN2/download/Databases/V11/dbCAN-HMMdb-V11.txt && \
 curl -o $HOME/.dbcanlight/substrate.hmm https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm
 ```
 
 ## Notes
-Although the hmmscan and hmmsearch is doing the same thing, the results may differ a bit since the evalue would be affected by the size of the database.
+Although the hmmscan and hmmsearch are doing the same thing, the results may differ a bit since the evalue would be affected by the size of the database.
 
 [run_dbcan]: https://github.com/linnabrown/run_dbcan
 [hmmscan_vs_hmmsearch]: http://cryptogenomicon.org/hmmscan-vs-hmmsearch-speed-the-numerology.html
