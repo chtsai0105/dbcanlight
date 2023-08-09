@@ -2,7 +2,7 @@ from pathlib import Path
 
 from dbcanlight.dbcanlight import hmmsearch_module
 
-input = "tests/example.faa"
+input = "example/example.faa"
 
 
 def test_hmmsearch():

@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from dbcanlight.utils import header, writer
+from dbcanlight.config import header
+from dbcanlight.utils import writer
 
 
 def load_file(file):
