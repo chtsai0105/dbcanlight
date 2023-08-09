@@ -121,7 +121,7 @@ def main():
         description=textwrap.dedent(main.__doc__),
         epilog=textwrap.dedent(main._epilog),
     )
-    parser.add_argument("-i", "--input", type=str, required=True, help="Protein fasta")
+    parser.add_argument("-i", "--input", type=str, required=True, help="Plain or gzipped protein fasta")
     parser.add_argument("-o", "--output", default=sys.stdout, help="Output directory (default=stdout)")
     parser.add_argument("-m", "--mode", choices=["cazyme", "sub"], required=True, help="mode")
     parser.add_argument("-e", "--evalue", type=float, default=1e-15, help="Reporting evalue cutoff (default=1e-15)")

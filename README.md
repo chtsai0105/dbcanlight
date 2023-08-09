@@ -30,7 +30,7 @@ Use `python3 dbcanlight.py --help` to see more details.
 options:
   -h, --help            show this help message and exit
   -i INPUT, --input INPUT
-                        Protein fasta
+                        Plain or gzipped protein fasta
   -o OUTPUT, --output OUTPUT
                         Output directory (default=stdout)
   -m {cazyme,sub}, --mode {cazyme,sub}
