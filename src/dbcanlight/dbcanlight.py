@@ -5,7 +5,12 @@ import argparse
 import logging
 import sys
 import textwrap
-from importlib.metadata import version
+
+try:
+    from importlib.metadata import version
+except ImportError:
+    from importlib_metadata import version
+
 from pathlib import Path
 
 import pyhmmer

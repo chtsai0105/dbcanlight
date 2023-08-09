@@ -7,7 +7,12 @@ import logging
 import re
 import sys
 import textwrap
-from importlib.metadata import version
+
+try:
+    from importlib.metadata import version
+except ImportError:
+    from importlib_metadata import version
+
 from pathlib import Path
 
 from .config import db_path, header
