@@ -6,13 +6,14 @@ import csv
 import logging
 import sys
 import textwrap
+from importlib.metadata import version
 from operator import itemgetter
 from pathlib import Path
 
 from Bio import SearchIO
 
-from ._version import __version__
-from .utils import header, writer
+from .config import header
+from .utils import writer
 
 
 class hmmsearch_parser:
@@ -128,7 +129,7 @@ def main():
     parser.add_argument("-e", "--evalue", type=float, default=1e-15, help="Reporting evalue cutoff (default=1e-15)")
     parser.add_argument("-c", "--coverage", type=float, default=0.35, help="Reporting coverage cutoff (default=0.35)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
-    parser.add_argument("-V", "--version", action="version", version=__version__)
+    parser.add_argument("-V", "--version", action="version", version=version("dbcanLight"))
 
     args = parser.parse_args()
 

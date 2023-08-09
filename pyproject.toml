@@ -7,6 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dbcanLight"
+version = "0.5"
 authors = [
   { name="Cheng-Hung Tsai", email="chenghung.tsai@email.ucr.edu" },
 ]
@@ -18,7 +19,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dynamic = ["version", "dependencies"]
+dynamic = ["dependencies"]
 
 [project.scripts]
 dbcanLight = "dbcanlight.dbcanlight:main"
@@ -30,7 +31,6 @@ dbcanLight-subparser = "dbcanlight.substrate_parser:main"
 "Bug Tracker" = "https://github.com/chtsai0105/dbcanLight/issues"
 
 [tool.setuptools.dynamic]
-version = {attr = "dbcanlight.__version__"}
 dependencies = {file = ["requirements.txt"]}
 
 [tool.pytest.ini_options]

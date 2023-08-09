@@ -3,15 +3,17 @@ from __future__ import annotations
 
 import argparse
 import logging
-import textwrap
 import sys
+import textwrap
+from importlib.metadata import version
 from pathlib import Path
 
 import pyhmmer
+
+from .config import db_path, header
 from .hmmsearch_parser import overlap_filter
-from .substrate_parser import substrate_mapping
-from .utils import header, writer
-from ._version import __version__
+from .substrate_parser import get_subs_dict, substrate_mapping
+from .utils import writer
 
 
 class hmmsearch_module:
@@ -74,7 +76,7 @@ class hmmsearch_module:
 
 
 def cazyme_finder(input: str, output, evalue: float, coverage: float, **kwargs):
-    hmm_file = Path.home() / ".dbcanlight/cazyme.hmm"
+    hmm_file = db_path.cazyme_hmms
     finder = hmmsearch_module(Path(input), hmm_file)
     results = finder.run(evalue=evalue, coverage=coverage)
     results = overlap_filter(results)
@@ -88,11 +90,11 @@ def cazyme_finder(input: str, output, evalue: float, coverage: float, **kwargs):
 
 
 def substrate_finder(input: str, output, evalue: float, coverage: float, **kwargs):
-    hmm_file = Path.home() / ".dbcanlight/substrate.hmm"
+    hmm_file = db_path.subs_hmms
     finder = hmmsearch_module(Path(input), hmm_file)
     results = finder.run(evalue=evalue, coverage=coverage)
     results = overlap_filter(results)
-    results = substrate_mapping(results)
+    results = substrate_mapping(results, get_subs_dict())
     if output == sys.stdout:
         out = output
     else:
@@ -126,7 +128,7 @@ def main():
     parser.add_argument("-c", "--coverage", type=float, default=0.35, help="Reporting coverage cutoff (default=0.35)")
     parser.add_argument("-t", "--threads", type=int, default=1, help="Total number of cpus allowed to use")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
-    parser.add_argument("-V", "--version", action="version", version=__version__)
+    parser.add_argument("-V", "--version", action="version", version=version("dbcanLight"))
 
     args = parser.parse_args()
 

@@ -1,25 +1,15 @@
 import logging
+import sys
 from pathlib import Path
-from copy import deepcopy
 
 
-class header:
-    hmmsearch = [
-        "HMM_Profile",
-        "Profile_Length",
-        "Gene_ID",
-        "Gene_Length",
-        "Evalue",
-        "Profile_Start",
-        "Profile_End",
-        "Gene_Start",
-        "Gene_End",
-        "Coverage",
-    ]
-
-    substrate = deepcopy(hmmsearch)
-    substrate.pop(0)
-    substrate[0:0] = ["dbCAN_subfam", "Subfam_Composition", "Subfam_EC", "Substrate"]
+def check_db(*dbs: Path) -> None:
+    dbmissingList = []
+    for db in dbs:
+        dbmissingList.append(db) if not db.exists() else None
+    if dbmissingList:
+        print(f"Database file {*dbmissingList,} missing. \nAborted")
+        sys.exit(1)
 
 
 def writer(results, output, header=[]):

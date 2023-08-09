@@ -7,23 +7,27 @@ import logging
 import re
 import sys
 import textwrap
+from importlib.metadata import version
 from pathlib import Path
 
-from .utils import header, writer
-from ._version import __version__
-
-subs_dict = {}
-with open(Path.home() / ".dbcanlight/substrate_mapping.tsv", "r") as f:
-    next(f)
-    for line in csv.reader(f, delimiter="\t"):
-        subs = set(re.split(r",[\s]|,", re.sub(r",[\s]and|[\s]and", ",", line[0])))
-        if line[4]:
-            subs_dict[line[2], line[4].strip()] = subs
-        else:
-            subs_dict[line[2], "-"] = subs
+from .config import db_path, header
+from .utils import writer
 
 
-def substrate_mapping(filtered_results: list) -> list:
+def get_subs_dict() -> dict:
+    subs_dict = {}
+    with open(db_path.subs_mapper, "r") as f:
+        next(f)
+        for line in csv.reader(f, delimiter="\t"):
+            subs = set(re.split(r",[\s]|,", re.sub(r",[\s]and|[\s]and", ",", line[0])))
+            if line[4]:
+                subs_dict[line[2], line[4].strip()] = subs
+            else:
+                subs_dict[line[2], "-"] = subs
+    return subs_dict
+
+
+def substrate_mapping(filtered_results: list, subs_dict: dict) -> list:
     results = []
     for line in filtered_results:
         subfam = None
@@ -88,7 +92,7 @@ def main():
     parser.add_argument("-i", "--input", type=Path, required=True, help="dbcan-sub searching output in dbcan format")
     parser.add_argument("-o", "--output", default=sys.stdout, help="Output file path (default=stdout)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
-    parser.add_argument("-V", "--version", action="version", version=__version__)
+    parser.add_argument("-V", "--version", action="version", version=version("dbcanLight"))
 
     args = parser.parse_args()
 
@@ -103,7 +107,7 @@ def main():
             handler.setLevel("DEBUG")
 
     with open(args.input, "r") as f:
-        results = substrate_mapping(csv.reader(f, delimiter="\t"))
+        results = substrate_mapping(csv.reader(f, delimiter="\t"), subs_dict=get_subs_dict())
         if args.output == sys.stdout:
             out = args.output
         else:
