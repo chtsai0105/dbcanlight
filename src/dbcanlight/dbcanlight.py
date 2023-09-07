@@ -15,10 +15,10 @@ from pathlib import Path
 
 import pyhmmer
 
-from .config import db_path, header
-from .hmmsearch_parser import overlap_filter
-from .substrate_parser import get_subs_dict, substrate_mapping
-from .utils import writer
+from dbcanlight.config import db_path, header
+from dbcanlight.hmmsearch_parser import overlap_filter
+from dbcanlight.substrate_parser import get_subs_dict, substrate_mapping
+from dbcanlight.utils import writer
 
 
 class hmmsearch_module:

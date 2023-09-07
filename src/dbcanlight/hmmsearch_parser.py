@@ -17,8 +17,8 @@ from pathlib import Path
 
 from Bio import SearchIO
 
-from .config import header
-from .utils import writer
+from dbcanlight.config import header
+from dbcanlight.utils import writer
 
 
 class hmmsearch_parser:

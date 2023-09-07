@@ -15,8 +15,8 @@ except ImportError:
 
 from pathlib import Path
 
-from .config import db_path, header
-from .utils import writer
+from dbcanlight.config import db_path, header
+from dbcanlight.utils import writer
 
 
 def get_subs_dict() -> dict:
