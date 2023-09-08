@@ -45,10 +45,10 @@ class hmmsearch_module:
         if f.is_pressed():
             self._hmms.rewind()
 
-    def _run_hmmsearch(self, sequences, evalue, coverage) -> dict[list]:
+    def _run_hmmsearch(self, sequences, evalue, coverage, threads) -> dict[list]:
         results = {}
         logging.debug("Start hmmsearch")
-        for hits in pyhmmer.hmmsearch(self._hmms, sequences):
+        for hits in pyhmmer.hmmsearch(self._hmms, sequences, cpus=threads):
             cog = hits.query_name.decode()
             cog_length = self._hmms_length[cog]
             for hit in hits:
@@ -75,9 +75,9 @@ class hmmsearch_module:
         logging.info(f"Found {len(results)} genes have hits")
         return results
 
-    def run(self, evalue: float, coverage: float) -> dict[list]:
+    def run(self, evalue: float, coverage: float, threads: int) -> dict[list]:
         self._load_input()
-        return self._run_hmmsearch(self._sequences, evalue, coverage)
+        return self._run_hmmsearch(self._sequences, evalue, coverage, threads)
 
 
 def cazyme_finder(input: str, output, evalue: float, coverage: float, **kwargs):

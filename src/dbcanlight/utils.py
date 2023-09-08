@@ -8,7 +8,10 @@ def check_db(*dbs: Path) -> None:
     for db in dbs:
         dbmissingList.append(db) if not db.exists() else None
     if dbmissingList:
-        print(f"Database file {*dbmissingList,} missing. \nAborted")
+        print(
+            f"Database file {*dbmissingList,} missing. "
+            "Please follow the instructions in https://github.com/chtsai0105/dbcanLight#requirements and download the required database."
+        )
         sys.exit(1)
 
 
