@@ -12,6 +12,7 @@ try:
 except ImportError:
     from importlib_metadata import version
 
+from collections.abc import Iterator
 from operator import itemgetter
 from pathlib import Path
 
@@ -70,8 +71,7 @@ class hmmsearch_parser:
         return results
 
 
-def overlap_filter(results: dict[list]) -> list:
-    filtered_results = []
+def overlap_filter(results: dict[list]) -> Iterator[list]:
     for gene in sorted(results.keys()):
         hits = results[gene]
         logging.debug(f"{gene}: Found {len(hits)} hits")
@@ -103,9 +103,7 @@ def overlap_filter(results: dict[list]) -> list:
             logging.debug(f"{gene}: {len(hits)} hit(s) passed the filter")
         for hit in hits:
             hit[4], hit[9] = f"{hit[4]:0.1e}", f"{hit[9]:0.3}"
-        filtered_results.extend(hits)
-    logging.info(f"{len(results)} hits passed the filter")
-    return filtered_results
+            yield hit
 
 
 def main():

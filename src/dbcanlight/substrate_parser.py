@@ -13,6 +13,7 @@ try:
 except ImportError:
     from importlib_metadata import version
 
+from collections.abc import Iterator
 from pathlib import Path
 
 from dbcanlight.config import db_path, header
@@ -32,8 +33,7 @@ def get_subs_dict() -> dict:
     return subs_dict
 
 
-def substrate_mapping(filtered_results: list, subs_dict: dict) -> list:
-    results = []
+def substrate_mapping(filtered_results: Iterator[list], subs_dict: dict[set]) -> Iterator[list]:
     for line in filtered_results:
         subfam = None
         sub_composition = []
@@ -60,17 +60,14 @@ def substrate_mapping(filtered_results: list, subs_dict: dict) -> list:
                 # logging.debug(f"No substrate found in {profile[0]}")
                 pass
 
-        results.append(
-            [
-                subfam,
-                ("|").join(sub_composition) if sub_composition else "-",
-                ("|").join(sub_ec) if sub_ec else "-",
-                (",").join(list(substrate)) if substrate else "-",
-                *line[1:-1],
-                f"{float(line[-1]):0.3}",
-            ]
-        )
-    return results
+        yield [
+            subfam,
+            ("|").join(sub_composition) if sub_composition else "-",
+            ("|").join(sub_ec) if sub_ec else "-",
+            (",").join(list(substrate)) if substrate else "-",
+            *line[1:-1],
+            f"{float(line[-1]):0.3}",
+        ]
 
 
 def main():

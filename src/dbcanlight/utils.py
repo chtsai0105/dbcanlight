@@ -1,5 +1,6 @@
 import logging
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 
@@ -15,7 +16,7 @@ def check_db(*dbs: Path) -> None:
         sys.exit(1)
 
 
-def writer(results, output, header=[]):
+def writer(results: Iterator[list], output, header: list = []) -> None:
     if isinstance(output, Path):
         logging.info(f"Write output to {output}")
         out = open(output, "w")
