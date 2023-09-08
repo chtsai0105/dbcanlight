@@ -75,15 +75,15 @@ class hmmsearch_module:
         logging.info(f"Found {len(results)} genes have hits")
         return results
 
-    def run(self, evalue: float, coverage: float, threads: int) -> dict[list]:
+    def run(self, evalue: float, coverage: float, threads: int = 4) -> dict[list]:
         self._load_input()
         return self._run_hmmsearch(self._sequences, evalue, coverage, threads)
 
 
-def cazyme_finder(input: str, output, evalue: float, coverage: float, **kwargs):
+def cazyme_finder(input: str, output, evalue: float, coverage: float, threads: int, **kwargs):
     hmm_file = db_path.cazyme_hmms
     finder = hmmsearch_module(Path(input), hmm_file)
-    results = finder.run(evalue=evalue, coverage=coverage)
+    results = finder.run(evalue=evalue, coverage=coverage, threads=threads)
     results = overlap_filter(results)
     if output == sys.stdout:
         out = output
@@ -94,10 +94,10 @@ def cazyme_finder(input: str, output, evalue: float, coverage: float, **kwargs):
     writer(results, out, header.hmmsearch)
 
 
-def substrate_finder(input: str, output, evalue: float, coverage: float, **kwargs):
+def substrate_finder(input: str, output, evalue: float, coverage: float, threads: int, **kwargs):
     hmm_file = db_path.subs_hmms
     finder = hmmsearch_module(Path(input), hmm_file)
-    results = finder.run(evalue=evalue, coverage=coverage)
+    results = finder.run(evalue=evalue, coverage=coverage, threads=threads)
     results = overlap_filter(results)
     results = substrate_mapping(results, get_subs_dict())
     if output == sys.stdout:
