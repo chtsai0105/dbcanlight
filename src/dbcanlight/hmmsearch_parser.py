@@ -111,11 +111,11 @@ def overlap_filter(results: dict[list]) -> list:
 def main():
     """
     dbcanLight hmmsearch parser.
-    Parse the CAZyme searching output in dbcan[*1] or domtblout format[*2], filter
-    with the given evalue and coverage cutoff, and output in dbcan format.
+    Parse the CAZyme searching output in dbcan[*1] or domtblout format[*2], filter with the given evalue and coverage
+    cutoff, and output in dbcan format.
 
-    *1 - dbcan format: hmm_name, hmm_length, gene_name, gene_length, evalue,
-        hmm_from, hmm_to, gene_from, gene_to, coverage. (10 columns)
+    *1 - dbcan format: hmm_name, hmm_length, gene_name, gene_length, evalue, hmm_from, hmm_to, gene_from, gene_to,
+        coverage. (10 columns)
     *2 - domtblout format:
         hmmsearch output with --domtblout enabled
     """

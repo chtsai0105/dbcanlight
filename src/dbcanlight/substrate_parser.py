@@ -76,13 +76,12 @@ def substrate_mapping(filtered_results: list, subs_dict: dict) -> list:
 def main():
     """
     dbcanLight substrate parser.
-    Parse the dbcan substrate searching output in dbcan format[*1], map them against
-    the dbcan substrate mapping table[*2] and output in dbcan format. The domtblout
-    output should first being processed by hmmsearch_parser.py before mapping by
-    this script.
+    Parse the dbcan substrate searching output in dbcan format[*1], map them against the dbcan substrate mapping
+    table[*2] and output in dbcan format. The domtblout output should first being processed by hmmsearch_parser.py
+    before mapping by this script.
 
-    *1 - dbcan format: hmm_name, hmm_length, gene_name, gene_length, evalue,
-        hmm_from, hmm_to, gene_from, gene_to, coverage. (10 columns)
+    *1 - dbcan format: hmm_name, hmm_length, gene_name, gene_length, evalue, hmm_from, hmm_to, gene_from, gene_to,
+        coverage. (10 columns)
     *2 - dbcan substrate mapping table:
         http://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv
     """

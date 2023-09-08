@@ -111,11 +111,9 @@ def substrate_finder(input: str, output, evalue: float, coverage: float, **kwarg
 
 def main():
     """
-    A lightweight version of run_dbcan which uses pyhmmer to improve the
-    multithreading performance.
-    This script take the protein fasta as input. It report the CAZyme family when
-    using the "cazyme" mode and report the potential substrates when using the "sub"
-    mode. (--tools hmmer/dbcansub in the original run_dbcan.
+    A lightweight version of run_dbcan which uses pyhmmer to improve the multithreading performance.
+    This script take the protein fasta as input. It report the CAZyme family when using the "cazyme" mode and report
+    the potential substrates when using the "sub" mode. (--tools hmmer/dbcansub in the original run_dbcan)
     """
     logging.basicConfig(format=f"%(asctime)s {main.__name__} %(levelname)s %(message)s", level="INFO")
     logger = logging.getLogger()
