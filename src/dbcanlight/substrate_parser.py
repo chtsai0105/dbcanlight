@@ -20,7 +20,7 @@ from dbcanlight.config import db_path, header
 from dbcanlight.utils import writer
 
 
-def get_subs_dict() -> dict:
+def get_subs_dict() -> dict[set]:
     subs_dict = {}
     with open(db_path.subs_mapper, "r") as f:
         next(f)

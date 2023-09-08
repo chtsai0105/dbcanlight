@@ -45,7 +45,9 @@ class hmmsearch_module:
         if f.is_pressed():
             self._hmms.rewind()
 
-    def _run_hmmsearch(self, sequences, evalue, coverage, threads) -> dict[list]:
+    def _run_hmmsearch(
+        self, sequences: pyhmmer.easel.DigitalSequenceBlock, evalue: float, coverage: float, threads: int
+    ) -> dict[list[list]]:
         results = {}
         logging.debug("Start hmmsearch")
         for hits in pyhmmer.hmmsearch(self._hmms, sequences, cpus=threads):
@@ -75,12 +77,12 @@ class hmmsearch_module:
         logging.info(f"Found {len(results)} genes have hits")
         return results
 
-    def run(self, evalue: float, coverage: float, threads: int = 4) -> dict[list]:
+    def run(self, evalue: float, coverage: float, threads: int = 0) -> dict[list[list]]:
         self._load_input()
         return self._run_hmmsearch(self._sequences, evalue, coverage, threads)
 
 
-def cazyme_finder(input: str, output, evalue: float, coverage: float, threads: int, **kwargs):
+def cazyme_finder(input: str, output, evalue: float, coverage: float, threads: int, **kwargs) -> None:
     hmm_file = db_path.cazyme_hmms
     finder = hmmsearch_module(Path(input), hmm_file)
     results = finder.run(evalue=evalue, coverage=coverage, threads=threads)
@@ -94,7 +96,7 @@ def cazyme_finder(input: str, output, evalue: float, coverage: float, threads: i
     writer(results, out, header.hmmsearch)
 
 
-def substrate_finder(input: str, output, evalue: float, coverage: float, threads: int, **kwargs):
+def substrate_finder(input: str, output, evalue: float, coverage: float, threads: int, **kwargs) -> None:
     hmm_file = db_path.subs_hmms
     finder = hmmsearch_module(Path(input), hmm_file)
     results = finder.run(evalue=evalue, coverage=coverage, threads=threads)

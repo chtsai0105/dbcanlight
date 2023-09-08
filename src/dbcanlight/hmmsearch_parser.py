@@ -34,7 +34,7 @@ class hmmsearch_parser:
             self._dbcanformat = True
             self._input = csv.reader(f, delimiter="\t")
 
-    def _hmmer_reader(self, input: str) -> list:
+    def _hmmer_reader(self, input: str) -> list[list]:
         lines = []
         with open(input, "r") as f:
             for hmm in SearchIO.parse(f, "hmmsearch3-domtab"):
@@ -57,7 +57,7 @@ class hmmsearch_parser:
                         )
         return lines
 
-    def eval_cov_filter(self, evalue: float, coverage: float) -> dict[list]:
+    def eval_cov_filter(self, evalue: float, coverage: float) -> dict[list[list]]:
         results = {}
         for line in self._input:
             if self._dbcanformat:
