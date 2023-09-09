@@ -84,7 +84,6 @@ class hmmsearch_module:
                 for seq in seq_block:
                     self._kh.add(seq.name)
                 yield self._run_hmmsearch(seq_block, evalue, coverage, threads)
-        self._hmms.close()
 
 
 def cazyme_finder(
@@ -137,7 +136,7 @@ def main():
     )
     parser.add_argument("-i", "--input", type=str, required=True, help="Plain or gzipped protein fasta")
     parser.add_argument("-o", "--output", default=sys.stdout, help="Output directory (default=stdout)")
-    parser.add_argument("-m", "--mode", choices=["cazyme", "sub"], required=True, help="mode")
+    parser.add_argument("-m", "--mode", choices=["cazyme", "sub"], required=True, help="Search against cazyme or substrate database")
     parser.add_argument("-e", "--evalue", type=float, default=1e-15, help="Reporting evalue cutoff (default=1e-15)")
     parser.add_argument("-c", "--coverage", type=float, default=0.35, help="Reporting coverage cutoff (default=0.35)")
     parser.add_argument("-t", "--threads", type=int, default=1, help="Total number of cpus allowed to use")
@@ -145,7 +144,7 @@ def main():
         "-b",
         "--blocksize",
         type=int,
-        help="Number of sequences to send per hmmsearch. Lower the block size to use fewer memory.",
+        help="Number of sequences to search per round. Lower the block size to use fewer memory",
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
     parser.add_argument("-V", "--version", action="version", version=version("dbcanLight"))

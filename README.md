@@ -25,7 +25,7 @@ All tests are run on the same machine with 8 cpus.
 ## Usage
 Please make sure the [required data](#required_data) have already been downloaded before use.
 
-Use `python3 dbcanlight.py --help` to see more details.
+Use `dbcanlight --help` to see more details.
 ```
 options:
   -h, --help            show this help message and exit
@@ -34,35 +34,48 @@ options:
   -o OUTPUT, --output OUTPUT
                         Output directory (default=stdout)
   -m {cazyme,sub}, --mode {cazyme,sub}
-                        mode
+                        Search against cazyme or substrate database
   -e EVALUE, --evalue EVALUE
                         Reporting evalue cutoff (default=1e-15)
   -c COVERAGE, --coverage COVERAGE
                         Reporting coverage cutoff (default=0.35)
   -t THREADS, --threads THREADS
                         Total number of cpus allowed to use
+  -b BLOCKSIZE, --blocksize BLOCKSIZE
+                        Number of sequences to search per round. Lower the block size to use fewer memory
   -v, --verbose         Verbose mode for debug
+  -V, --version         show program's version number and exit
 ```
 
 Say we have a protein fasta file **protein.faa**. Run the dbcan cazyme search with 8 cpus:
 ```
-python3 dbcanlight.py -i protein.faa -m cazyme -t 8
+dbcanlight -i protein.faa -m cazyme -t 8
 ```
 By default the output will direct to stdout. Note that all the logs (below error level) will be suppressed.
 
 Output to file by specifying `-o/--output [output directory]`.
 ```
-python3 dbcanlight.py -i protein.faa -o output -m cazyme -t 8
+dbcanlight -i protein.faa -o output -m cazyme -t 8
 ```
 The filename will be "**cazymes.tsv**" with `cazyme` mode and "**substrates.tsv**" with `sub` mode.
 
+When searching within a very large sequence database, such as one containing over 1,000,000 sequences,
+it's challenging to predict the number of hits in advance, making it easy to exceed memory limits.
+dbcanLight offers a solution by allowing users to perform searches using split sequence blocks, effectively avoiding memory limitations.
+
+The example below demonstrates searching within a sequence block containing 10,000 sequences during each iteration,
+repeating the process until all the sequences have been processed.
+```
+dbcanlight -i protein.faa -o output -m cazyme -b 10000 -t 8
+```
+
 ### hmmsearch and substrate parser
-The script `hmmsearch_parser.py` can be used to process the domtblout format output from cli version hmmsearch.
+The script `dbcanLight-hmmparser` can be used to process the domtblout format output from cli version hmmsearch.
 It uses the Biopython SearchIO module to read the hmmer3 domtblout.
 If a gene have multiple hits and these hits are overlapped over 50%, only the hit with the lowest evalue will be reported.
 The output will be a 10-column tsv. (hmm_name, hmm_length, gene_name, gene_length, evalue, hmm_from, hmm_to, gene_from, gene_to, coverage)
 
-Use `python3 hmmsearch_parser.py --help` to see more details.
+Use `dbcanLight-hmmparser --help` to see more details.
 ```
 options:
   -h, --help            show this help message and exit
@@ -83,9 +96,9 @@ We can filter the results by:
 python3 hmmsearch_parser.py -i hmmsearch.out
 ```
 
-The script `substrate_parser.py` is used to map HMM profiles to its potential substrates.
-Note that if your results is in domtblout format, you should first use `hmmsearch_parser.py` to convert it to a 10-column tsv.
-Use `python3 substrate_parser.py --help` to see more details.
+The script `dbcanLight-subparser` is used to map HMM profiles to its potential substrates.
+Note that if your results is in domtblout format, you should first use `dbcanLight-subparser` to convert it to a 10-column tsv.
+Use `dbcanLight-subparser --help` to see more details.
 ```
 options:
   -h, --help            show this help message and exit
