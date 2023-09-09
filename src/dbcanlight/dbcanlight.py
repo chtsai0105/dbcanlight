@@ -11,6 +11,7 @@ try:
 except ImportError:
     from importlib_metadata import version
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pyhmmer
@@ -22,17 +23,12 @@ from dbcanlight.utils import writer
 
 
 class hmmsearch_module:
-    def __init__(self, faa_file: Path, hmm_file: Path):
+    def __init__(self, faa_file: Path, hmm_file: Path, blocksize=None):
         self._faa = faa_file
         self._hmm_file = hmm_file
+        self._blocksize = blocksize
 
-    def _load_input(self) -> None:
-        seq_file = pyhmmer.easel.SequenceFile(self._faa, digital=True)
-        self._sequences = seq_file.read_block()
-        self._kh = pyhmmer.easel.KeyHash()
-        for seq in self._sequences:
-            self._kh.add(seq.name)
-
+    def load_hmms(self) -> None:
         f = pyhmmer.plan7.HMMFile(self._hmm_file)
         if f.is_pressed():
             self._hmms = f.optimized_profiles()
@@ -65,7 +61,7 @@ class hmmsearch_module:
                             cog,
                             cog_length,
                             hit.name.decode(),
-                            len(self._sequences[self._kh[hit.name]]),
+                            len(sequences[self._kh[hit.name]]),
                             domain.i_evalue,
                             hmm_from,
                             hmm_to,
@@ -77,14 +73,25 @@ class hmmsearch_module:
         logging.info(f"Found {len(results)} genes have hits")
         return results
 
-    def run(self, evalue: float, coverage: float, threads: int = 0) -> dict[list[list]]:
-        self._load_input()
-        return self._run_hmmsearch(self._sequences, evalue, coverage, threads)
+    def run(self, evalue: float, coverage: float, threads: int = 0) -> Iterator[dict[list[list]]]:
+        self.load_hmms()
+        with pyhmmer.easel.SequenceFile(self._faa, digital=True) as seq_file:
+            while True:
+                seq_block = seq_file.read_block(sequences=self._blocksize)
+                if not seq_block:
+                    break
+                self._kh = pyhmmer.easel.KeyHash()
+                for seq in seq_block:
+                    self._kh.add(seq.name)
+                yield self._run_hmmsearch(seq_block, evalue, coverage, threads)
+        self._hmms.close()
 
 
-def cazyme_finder(input: str, output, evalue: float, coverage: float, threads: int, **kwargs) -> None:
+def cazyme_finder(
+    input: str, output, evalue: float, coverage: float, threads: int, blocksize: int = None, **kwargs
+) -> None:
     hmm_file = db_path.cazyme_hmms
-    finder = hmmsearch_module(Path(input), hmm_file)
+    finder = hmmsearch_module(Path(input), hmm_file, blocksize)
     results = finder.run(evalue=evalue, coverage=coverage, threads=threads)
     results = overlap_filter(results)
     if output == sys.stdout:
@@ -96,9 +103,11 @@ def cazyme_finder(input: str, output, evalue: float, coverage: float, threads: i
     writer(results, out, header.hmmsearch)
 
 
-def substrate_finder(input: str, output, evalue: float, coverage: float, threads: int, **kwargs) -> None:
+def substrate_finder(
+    input: str, output, evalue: float, coverage: float, threads: int, blocksize: int = None, **kwargs
+) -> None:
     hmm_file = db_path.subs_hmms
-    finder = hmmsearch_module(Path(input), hmm_file)
+    finder = hmmsearch_module(Path(input), hmm_file, blocksize)
     results = finder.run(evalue=evalue, coverage=coverage, threads=threads)
     results = overlap_filter(results)
     results = substrate_mapping(results, get_subs_dict())
@@ -132,6 +141,12 @@ def main():
     parser.add_argument("-e", "--evalue", type=float, default=1e-15, help="Reporting evalue cutoff (default=1e-15)")
     parser.add_argument("-c", "--coverage", type=float, default=0.35, help="Reporting coverage cutoff (default=0.35)")
     parser.add_argument("-t", "--threads", type=int, default=1, help="Total number of cpus allowed to use")
+    parser.add_argument(
+        "-b",
+        "--blocksize",
+        type=int,
+        help="Number of sequences to send per hmmsearch. Lower the block size to use fewer memory.",
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
     parser.add_argument("-V", "--version", action="version", version=version("dbcanLight"))
 
@@ -146,6 +161,11 @@ def main():
         logger.setLevel("DEBUG")
         for handler in logger.handlers:
             handler.setLevel("DEBUG")
+
+    if args.blocksize is not None:
+        if args.blocksize < 1:
+            logging.error(f"Error. Blocksize={args.blocksize} is smaller than 1.")
+            sys.exit(1)
 
     if args.mode == "cazyme":
         cazyme_finder(**vars(args))

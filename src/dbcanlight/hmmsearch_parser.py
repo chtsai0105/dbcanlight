@@ -57,7 +57,7 @@ class hmmsearch_parser:
                         )
         return lines
 
-    def eval_cov_filter(self, evalue: float, coverage: float) -> dict[list[list]]:
+    def eval_cov_filter(self, evalue: float, coverage: float) -> list[dict[list[list]]]:
         results = {}
         for line in self._input:
             if self._dbcanformat:
@@ -68,42 +68,43 @@ class hmmsearch_parser:
                 continue
             results.setdefault(line[2], []).append(line)
         logging.info(f"Found {len(results)} genes have hits")
-        return results
+        return [results]
 
 
-def overlap_filter(results: dict[list]) -> Iterator[list]:
-    for gene in sorted(results.keys()):
-        hits = results[gene]
-        logging.debug(f"{gene}: Found {len(hits)} hits")
-        if len(hits) > 1:
-            # Sorted by the gene_from
-            hits = sorted(hits, key=itemgetter(7))
-            idx = 0
-            while idx < len(hits) - 1:
-                hit1, hit2 = hits[idx], hits[idx + 1]
-                # Check if two hits are overlapped over 50%
-                overlap = hit1[8] - hit2[7]  # Overlap between the two hits (positive if overlap)
-                len1 = hit1[8] - hit1[7]  # Length of hit1
-                len2 = hit2[8] - hit2[7]  # Length of hit2
-                # If two hits are overlapped and the overlapped region
-                # is 50% larger than the total length of either of the hit
-                if overlap > 0 and (overlap / len1 > 0.5 or overlap / len2 > 0.5):
-                    # Hit1 (idx) is more confident than hit2 (idx+1),
-                    # pop hit2 and do not move the pointer (the next hit would become idx+1 after pop)
-                    if hit1[4] <= hit2[4]:
-                        hits.pop(idx + 1)
-                    # Hit2 (idx+1) is more confident than hit1 (idx),
-                    # pop hit1 (idx) and do not move the pointer
-                    # (Hit 2 and the next hit will become idx and idx+1 in the next iteration)
+def overlap_filter(results_gen: Iterator[dict[list]]) -> Iterator[list]:
+    for results in results_gen:
+        for gene in sorted(results.keys()):
+            hits = results[gene]
+            logging.debug(f"{gene}: Found {len(hits)} hits")
+            if len(hits) > 1:
+                # Sorted by the gene_from
+                hits = sorted(hits, key=itemgetter(7))
+                idx = 0
+                while idx < len(hits) - 1:
+                    hit1, hit2 = hits[idx], hits[idx + 1]
+                    # Check if two hits are overlapped over 50%
+                    overlap = hit1[8] - hit2[7]  # Overlap between the two hits (positive if overlap)
+                    len1 = hit1[8] - hit1[7]  # Length of hit1
+                    len2 = hit2[8] - hit2[7]  # Length of hit2
+                    # If two hits are overlapped and the overlapped region
+                    # is 50% larger than the total length of either of the hit
+                    if overlap > 0 and (overlap / len1 > 0.5 or overlap / len2 > 0.5):
+                        # Hit1 (idx) is more confident than hit2 (idx+1),
+                        # pop hit2 and do not move the pointer (the next hit would become idx+1 after pop)
+                        if hit1[4] <= hit2[4]:
+                            hits.pop(idx + 1)
+                        # Hit2 (idx+1) is more confident than hit1 (idx),
+                        # pop hit1 (idx) and do not move the pointer
+                        # (Hit 2 and the next hit will become idx and idx+1 in the next iteration)
+                        else:
+                            hits.pop(idx)
                     else:
-                        hits.pop(idx)
-                else:
-                    # If not overlapped than move the pointer
-                    idx += 1
-            logging.debug(f"{gene}: {len(hits)} hit(s) passed the filter")
-        for hit in hits:
-            hit[4], hit[9] = f"{hit[4]:0.1e}", f"{hit[9]:0.3}"
-            yield hit
+                        # If not overlapped than move the pointer
+                        idx += 1
+                logging.debug(f"{gene}: {len(hits)} hit(s) passed the filter")
+            for hit in hits:
+                hit[4], hit[9] = f"{hit[4]:0.1e}", f"{hit[9]:0.3}"
+                yield hit
 
 
 def main():

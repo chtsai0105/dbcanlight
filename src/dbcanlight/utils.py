@@ -17,14 +17,15 @@ def check_db(*dbs: Path) -> None:
 
 
 def writer(results: Iterator[list], output, header: list = []) -> None:
+    first_line = next(results)
     if isinstance(output, Path):
         logging.info(f"Write output to {output}")
-        out = open(output, "w")
-        if len(header) == len(results[0]):
-            print("\t".join([str(x) for x in header]), file=out)
+        output = open(output, "w")
+        if len(header) == len(first_line):
+            print("\t".join([str(x) for x in header]), file=output)
         else:
             raise Exception("The length of results and header is not consistent")
-    else:
-        out = output
+
+    print("\t".join([str(x) for x in first_line]), file=output)
     for line in results:
-        print("\t".join([str(x) for x in line]), file=out)
+        print("\t".join([str(x) for x in line]), file=output)
