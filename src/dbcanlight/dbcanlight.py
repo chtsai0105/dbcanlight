@@ -11,7 +11,11 @@ try:
 except ImportError:
     from importlib_metadata import version
 
-from collections.abc import Iterator
+if sys.version_info >= (3, 9):
+    from collections.abc import Iterator
+else:
+    from typing import Iterator
+
 from pathlib import Path
 
 import pyhmmer
@@ -136,7 +140,9 @@ def main():
     )
     parser.add_argument("-i", "--input", type=str, required=True, help="Plain or gzipped protein fasta")
     parser.add_argument("-o", "--output", default=sys.stdout, help="Output directory (default=stdout)")
-    parser.add_argument("-m", "--mode", choices=["cazyme", "sub"], required=True, help="Search against cazyme or substrate database")
+    parser.add_argument(
+        "-m", "--mode", choices=["cazyme", "sub"], required=True, help="Search against cazyme or substrate database"
+    )
     parser.add_argument("-e", "--evalue", type=float, default=1e-15, help="Reporting evalue cutoff (default=1e-15)")
     parser.add_argument("-c", "--coverage", type=float, default=0.35, help="Reporting coverage cutoff (default=0.35)")
     parser.add_argument("-t", "--threads", type=int, default=1, help="Total number of cpus allowed to use")

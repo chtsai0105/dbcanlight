@@ -1,6 +1,11 @@
 import logging
 import sys
-from collections.abc import Iterator
+
+if sys.version_info >= (3, 9):
+    from collections.abc import Iterator
+else:
+    from typing import Iterator
+
 from pathlib import Path
 
 
