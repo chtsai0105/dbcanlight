@@ -1,4 +1,10 @@
-from collections.abc import Iterator
+import sys
+
+if sys.version_info >= (3, 9):
+    from collections.abc import Iterator
+else:
+    from typing import Iterator
+
 from pathlib import Path
 
 from dbcanlight.dbcanlight import hmmsearch_module
