@@ -7,10 +7,37 @@ on:
   pull_request:
     branches: ["main"]
     paths: ["**.py", "requirements.txt"]
+  workflow_dispatch:
 
 jobs:
+  download_external:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cache external data
+        uses: actions/cache@v3
+        with:
+          path: ~/.dbcanlight
+          key: dbcanlight-external
+
+      - name: Get external data
+        run: |
+          mkdir -p ~/.dbcanlight
+          if ! [ -f ~/.dbcanlight/cazyme.hmm ]; \
+            then curl -o ~/.dbcanlight/cazyme.hmm https://bcb.unl.edu/dbCAN2/download/Databases/V12/dbCAN-HMMdb-V12.txt; \
+          fi
+          if ! [ -f ~/.dbcanlight/substrate_mapping.tsv ]; \
+            then curl -o ~/.dbcanlight/substrate_mapping.tsv https://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv; \
+          fi
+          if ! [ -f ~/.dbcanlight/substrate.hmm ]; \
+            then curl -o ~/.dbcanlight/substrate.hmm https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm; \
+          fi
+
   build:
     runs-on: ubuntu-latest
+
+    needs: download_external
+
     strategy:
       fail-fast: false
       matrix:
@@ -52,13 +79,6 @@ jobs:
         with:
           path: ~/.dbcanlight
           key: dbcanlight-external
-
-      - name: Get external data
-        run: |
-          mkdir -p ~/.dbcanlight
-          curl -o ~/.dbcanlight/substrate_mapping.tsv https://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv
-          curl -o ~/.dbcanlight/cazyme.hmm https://bcb.unl.edu/dbCAN2/download/Databases/V12/dbCAN-HMMdb-V12.txt
-          curl -o ~/.dbcanlight/substrate.hmm https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm
 
       - name: Test with pytest
         run: |
