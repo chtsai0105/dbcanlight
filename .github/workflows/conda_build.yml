@@ -10,10 +10,32 @@ on:
   workflow_dispatch:
 
 jobs:
-  download_external:
+  build-conda:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v3
+
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yml
+          create-args: >-
+            python=3.10
+            flake8
+            pytest
+
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=130 --statistics
+        shell: micromamba-shell {0}
+
+      - name: Install package
+        run: |
+          pip install .
+        shell: micromamba-shell {0}
+
       - name: Cache external data
         uses: actions/cache@v3
         with:
@@ -33,54 +55,7 @@ jobs:
             then curl -o ~/.dbcanlight/substrate.hmm https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm; \
           fi
 
-  build-conda:
-    runs-on: ubuntu-latest
-
-    needs: download_external
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.10"
-
-      - name: Cache Conda environment
-        uses: actions/cache@v3
-        with:
-          path: /usr/share/miniconda
-          key: conda-${{ runner.os }}-${{ hashFiles('environment.yml') }}
-          restore-keys: conda-${{ runner.os }}-
-        id: cache
-
-      - name: Add conda to system path
-        run: |
-          echo $CONDA/bin >> $GITHUB_PATH
-
-      - name: Install dependencies
-        run: |
-          conda env update --file environment.yml --name base
-          conda install flake8
-          conda install pytest
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=130 --statistics
-
-      - name: Install package
-        run: |
-          pip install .
-
-      - name: Cache external data
-        uses: actions/cache@v3
-        with:
-          path: ~/.dbcanlight
-          key: dbcanlight-external
-
       - name: Test with pytest
         run: |
           pytest
+        shell: micromamba-shell {0}
