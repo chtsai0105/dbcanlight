@@ -1,5 +1,5 @@
 
-![Conda](https://github.com/chtsai0105/dbcanLight/actions/workflows/conda-building-check.yml/badge.svg)
+![Conda](https://github.com/chtsai0105/dbcanLight/actions/workflows/conda_build.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11-blue)
 
 
