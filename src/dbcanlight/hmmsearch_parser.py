@@ -79,7 +79,6 @@ def overlap_filter(results_gen: Iterator[dict[list]]) -> Iterator[list]:
     for results in results_gen:
         for gene in sorted(results.keys()):
             hits = results[gene]
-            logging.debug(f"{gene}: Found {len(hits)} hits")
             if len(hits) > 1:
                 # Sorted by the gene_from
                 hits = sorted(hits, key=itemgetter(7))

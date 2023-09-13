@@ -5,6 +5,7 @@ import argparse
 import logging
 import sys
 import textwrap
+import tracemalloc
 
 try:
     from importlib.metadata import version
@@ -93,6 +94,7 @@ class hmmsearch_module:
 def cazyme_finder(
     input: str, output, evalue: float, coverage: float, threads: int, blocksize: int = None, **kwargs
 ) -> None:
+    tracemalloc.start()
     hmm_file = db_path.cazyme_hmms
     finder = hmmsearch_module(Path(input), hmm_file, blocksize)
     results = finder.run(evalue=evalue, coverage=coverage, threads=threads)
@@ -104,11 +106,15 @@ def cazyme_finder(
         out.mkdir(parents=True, exist_ok=True)
         out = out / "cazymes.tsv"
     writer(results, out, header.hmmsearch)
+    _, peak = tracemalloc.get_traced_memory()
+    logging.debug(f"Peak momery usage: {peak / 10**6} MB")
+    tracemalloc.stop()
 
 
 def substrate_finder(
     input: str, output, evalue: float, coverage: float, threads: int, blocksize: int = None, **kwargs
 ) -> None:
+    tracemalloc.start()
     hmm_file = db_path.subs_hmms
     finder = hmmsearch_module(Path(input), hmm_file, blocksize)
     results = finder.run(evalue=evalue, coverage=coverage, threads=threads)
@@ -121,6 +127,9 @@ def substrate_finder(
         out.mkdir(parents=True, exist_ok=True)
         out = out / "substrates.tsv"
     writer(results, out, header.substrate)
+    _, peak = tracemalloc.get_traced_memory()
+    logging.debug(f"Peak momery usage: {peak / 10**6} MB")
+    tracemalloc.stop()
 
 
 def main():
@@ -150,7 +159,8 @@ def main():
         "-b",
         "--blocksize",
         type=int,
-        help="Number of sequences to search per round. Lower the block size to use fewer memory",
+        default=100000,
+        help="Number of sequences to search per round. Lower the block size to use fewer memory (default=100000)",
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
     parser.add_argument("-V", "--version", action="version", version=version("dbcanLight"))
