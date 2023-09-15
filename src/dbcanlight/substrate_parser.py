@@ -21,7 +21,7 @@ else:
 from pathlib import Path
 
 from dbcanlight.config import db_path, header
-from dbcanlight.utils import writer
+from dbcanlight.utils import check_db, writer
 
 
 def get_subs_dict() -> dict[set]:
@@ -111,6 +111,7 @@ def main():
         for handler in logger.handlers:
             handler.setLevel("DEBUG")
 
+    check_db(db_path.subs_mapper)
     with open(args.input, "r") as f:
         results = substrate_mapping(csv.reader(f, delimiter="\t"), subs_dict=get_subs_dict())
         if args.output == sys.stdout:

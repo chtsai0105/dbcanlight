@@ -24,7 +24,7 @@ import pyhmmer
 from dbcanlight.config import db_path, header
 from dbcanlight.hmmsearch_parser import overlap_filter
 from dbcanlight.substrate_parser import get_subs_dict, substrate_mapping
-from dbcanlight.utils import writer
+from dbcanlight.utils import check_db, writer
 
 
 class hmmsearch_module:
@@ -183,8 +183,10 @@ def main():
             sys.exit(1)
 
     if args.mode == "cazyme":
+        check_db(db_path.cazyme_hmms)
         cazyme_finder(**vars(args))
     else:
+        check_db(db_path.db_path.subs_hmms, db_path.subs_mapper)
         substrate_finder(**vars(args))
 
 
