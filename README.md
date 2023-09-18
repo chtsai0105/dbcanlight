@@ -1,10 +1,12 @@
-![Conda](https://github.com/chtsai0105/dbcanLight/actions/workflows/conda_build.yml/badge.svg)
-![Python](https://img.shields.io/badge/python-3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11-blue)
+[![Build](https://img.shields.io/github/actions/workflow/status/chtsai0105/dbcanlight/python_versions.yml?branch=main&logo=github)](https://github.com/chtsai0105/dbcanLight/actions/workflows/python_versions.yml)
+[![Bioconda](https://img.shields.io/conda/v/bioconda/dbcanlight?logo=anaconda&color=orange)][Bioconda]
+[![Python](https://img.shields.io/badge/python-3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11-blue?logo=python)](https://github.com/chtsai0105/dbcanLight/actions/workflows/python_versions.yml)
+[![License](https://img.shields.io/github/license/chtsai0105/dbcanLight?label=license)](https://github.com/chtsai0105/dbcanLight/blob/master/LICENSE)
 
 # dbcanLight
 
-A lightweight rewrite of [run_dbcan] for better multithreading performance.
-The current version of run_dbcan is using hmmscan, which is reported to be way slow compared to hmmsearch although they're doing the same compute.
+A lightweight rewrite of [run_dbcan] for better multithread performance.
+The current version of run_dbcan uses hmmscan, which is reported to be way slow compared to hmmsearch although they're doing the same compute.
 It is highly recommended to [use hmmsearch for searching a large sequence database against a profile database][hmmscan_vs_hmmsearch].
 To improve the performance and the code readability, [pyhmmer], a Cython bindings to HMMER3, was used instead of the cli HMMER3 suite to run hmmsearch.
 
@@ -12,6 +14,11 @@ In addition to the main script `dbcanlight.py`, another 2 scripts are also inclu
 The `hmmsearch_parser.py` is a rewrite of `hmmscan_parser.py` in `run_dbcan` which can be used to filter the overlapped hits
 and convert a domtblout format of hmmsearch into a run_dbcan-10-column format.
 The `substrate_parser.py` takes the dbcan-formatted substrate output and map against the [substrate convertion table][dbcansub].
+
+The output of dbcanLight is fully compatible with the original [run_dbcan].
+However, dbcanLight only re-implemented part of the run_dbcan features, that is searching for Cazyme and substrate matches.
+Submodules like DIAMOND, signalP, CGCFinder, etc. are not included.
+If you tend to use these features, please use the original version of [run_dbcan].
 
 ## Usage
 
@@ -83,16 +90,22 @@ Use `dbcanLight-subparser --help` to see more details.
 
 ## Install
 
-Use the environment.yml to install all the required packages
+dbcanLight is available on [Bioconda], you can install it through:
 
 ```
-conda env create -f environment.yml
+conda install -c bioconda dbcanlight
 ```
+
+Note that the bioconda dependencies require python to be >= 3.9 when installing via conda.
+
+Alternatively, you can build from the source code.
+Download the source code from the [latest release](https://github.com/chtsai0105/dbcanLight/releases/latest) and decompress it.
+To avoid messing around the base environment, try to create a conda/virturl env and install it inside it.
 
 Install the package through pip
 
 ```
-cd dbcanLight
+cd dbcanLight-1.0.0
 pip install .
 ```
 
@@ -130,3 +143,4 @@ Although hmmscan and hmmsearch are doing the same thing, the results may differ 
 [pyhmmer]: https://pyhmmer.readthedocs.io/en/stable/index.html
 [dbcansub]: http://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv
 [Biopython]: https://biopython.org/
+[Bioconda]: https://anaconda.org/bioconda/dbcanlight
