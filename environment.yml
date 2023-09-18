@@ -1,9 +1,0 @@
-name: dbcanLight
-channels:
-  - conda-forge
-  - bioconda
-  - defaults
-dependencies:
-  - biopython>=1.79
-  - pyhmmer>=0.10.2
-  - python>=3.7.12
