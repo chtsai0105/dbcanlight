@@ -186,7 +186,7 @@ def main():
         check_db(db_path.cazyme_hmms)
         cazyme_finder(**vars(args))
     else:
-        check_db(db_path.db_path.subs_hmms, db_path.subs_mapper)
+        check_db(db_path.subs_hmms, db_path.subs_mapper)
         substrate_finder(**vars(args))
 
 
