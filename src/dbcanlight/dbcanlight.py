@@ -91,42 +91,17 @@ class hmmsearch_module:
                 yield self._run_hmmsearch(seq_block, evalue, coverage, threads)
 
 
-def cazyme_finder(
-    input: str, output, evalue: float, coverage: float, threads: int, blocksize: int = None, **kwargs
+def dbcan_runner(
+    input: str, output, hmms, evalue: float, coverage: float, threads: int, blocksize: int = None, **kwargs
 ) -> None:
     tracemalloc.start()
-    hmm_file = db_path.cazyme_hmms
-    finder = hmmsearch_module(Path(input), hmm_file, blocksize)
+    finder = hmmsearch_module(Path(input), hmms, blocksize)
     results = finder.run(evalue=evalue, coverage=coverage, threads=threads)
     results = overlap_filter(results)
-    if output == sys.stdout:
-        out = output
-    else:
-        out = Path(output)
-        out.mkdir(parents=True, exist_ok=True)
-        out = out / "cazymes.tsv"
-    writer(results, out, header.hmmsearch)
-    _, peak = tracemalloc.get_traced_memory()
-    logging.debug(f"Peak momery usage: {peak / 10**6} MB")
-    tracemalloc.stop()
+    if hmms == db_path.subs_hmms:
+        results = substrate_mapping(results, get_subs_dict())
 
-
-def substrate_finder(
-    input: str, output, evalue: float, coverage: float, threads: int, blocksize: int = None, **kwargs
-) -> None:
-    tracemalloc.start()
-    hmm_file = db_path.subs_hmms
-    finder = hmmsearch_module(Path(input), hmm_file, blocksize)
-    results = finder.run(evalue=evalue, coverage=coverage, threads=threads)
-    results = overlap_filter(results)
-    results = substrate_mapping(results, get_subs_dict())
-    if output == sys.stdout:
-        out = output
-    else:
-        out = Path(output)
-        out.mkdir(parents=True, exist_ok=True)
-        out = out / "substrates.tsv"
-    writer(results, out, header.substrate)
+    writer(results, output, header.hmmsearch)
     _, peak = tracemalloc.get_traced_memory()
     logging.debug(f"Peak momery usage: {peak / 10**6} MB")
     tracemalloc.stop()
@@ -171,6 +146,9 @@ def main():
         logger.setLevel("ERROR")
         for handler in logger.handlers:
             handler.setLevel("ERROR")
+    else:
+        args.output = Path(args.output)
+        args.output.mkdir(parents=True, exist_ok=True)
 
     if args.verbose:
         logger.setLevel("DEBUG")
@@ -184,10 +162,13 @@ def main():
 
     if args.mode == "cazyme":
         check_db(db_path.cazyme_hmms)
-        cazyme_finder(**vars(args))
+        hmm_file = db_path.cazyme_hmms
+        args.output = args.output / "cazymes.tsv"
     else:
         check_db(db_path.subs_hmms, db_path.subs_mapper)
-        substrate_finder(**vars(args))
+        hmm_file = db_path.subs_hmms
+        args.output = args.output / "substrates.tsv"
+    dbcan_runner(**vars(args), hmms=hmm_file)
 
 
 main.__name__ = "dbcanLight"
