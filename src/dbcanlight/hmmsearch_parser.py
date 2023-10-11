@@ -22,7 +22,6 @@ from pathlib import Path
 
 from Bio import SearchIO
 
-from dbcanlight.config import header
 from dbcanlight.utils import writer
 
 
@@ -30,11 +29,11 @@ class hmmsearch_parser:
     def __init__(self, input: str):
         try:
             self._input = self._hmmer_reader(input)
-            logging.info("Input is in hmmer3 format")
+            logging.info("Input is hmmer3 format")
             self._dbcanformat = False
         except AssertionError:
             f = open(input, "r")
-            logging.info("Input is in dbcan format")
+            logging.info("Input is dbcan format")
             self._dbcanformat = True
             self._input = csv.reader(f, delimiter="\t")
 
@@ -144,6 +143,8 @@ def main():
         logger.setLevel("ERROR")
         for handler in logger.handlers:
             handler.setLevel("ERROR")
+    else:
+        args.output = Path(args.output)
 
     if args.verbose:
         logger.setLevel("DEBUG")
@@ -153,11 +154,7 @@ def main():
     data_parser = hmmsearch_parser(args.input)
     results = data_parser.eval_cov_filter(args.evalue, args.coverage)
     results = overlap_filter(results)
-    if args.output == sys.stdout:
-        out = args.output
-    else:
-        out = Path(args.output) / "substrates.tsv"
-    writer(results, out, header.substrate)
+    writer(results, args.output)
 
 
 main.__name__ = "dbcanLight-hmmparser"

@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pyhmmer
 
-from dbcanlight.config import db_path, header
+from dbcanlight.config import db_path
 from dbcanlight.hmmsearch_parser import overlap_filter
 from dbcanlight.substrate_parser import get_subs_dict, substrate_mapping
 from dbcanlight.utils import check_db, writer
@@ -101,7 +101,7 @@ def dbcan_runner(
     if hmms == db_path.subs_hmms:
         results = substrate_mapping(results, get_subs_dict())
 
-    writer(results, output, header.hmmsearch)
+    writer(results, output)
     _, peak = tracemalloc.get_traced_memory()
     logging.debug(f"Peak momery usage: {peak / 10**6} MB")
     tracemalloc.stop()
@@ -148,7 +148,6 @@ def main():
             handler.setLevel("ERROR")
     else:
         args.output = Path(args.output)
-        args.output.mkdir(parents=True, exist_ok=True)
 
     if args.verbose:
         logger.setLevel("DEBUG")
@@ -163,11 +162,9 @@ def main():
     if args.mode == "cazyme":
         check_db(db_path.cazyme_hmms)
         hmm_file = db_path.cazyme_hmms
-        args.output = args.output / "cazymes.tsv"
     else:
         check_db(db_path.subs_hmms, db_path.subs_mapper)
         hmm_file = db_path.subs_hmms
-        args.output = args.output / "substrates.tsv"
     dbcan_runner(**vars(args), hmms=hmm_file)
 
 

@@ -8,6 +8,8 @@ else:
 
 from pathlib import Path
 
+from dbcanlight.config import headers
+
 
 def check_db(*dbs: Path) -> None:
     dbmissingList = []
@@ -21,15 +23,23 @@ def check_db(*dbs: Path) -> None:
         sys.exit(1)
 
 
-def writer(results: Iterator[list], output, header: list = []) -> None:
+def writer(results: Iterator[list], output) -> None:
     first_line = next(results)
     if isinstance(output, Path):
+        output.mkdir(parents=True, exist_ok=True)
+
+        if len(first_line) == len(headers.hmmsearch):
+            header = headers.hmmsearch
+            output = output / "cazymes.tsv"
+        elif len(first_line) == len(headers.substrate):
+            header = headers.substrate
+            output = output / "substrates.tsv"
+        else:
+            raise Exception("The length of the results doesn't match to any form of headers.")
+
         logging.info(f"Write output to {output}")
         output = open(output, "w")
-        if len(header) == len(first_line):
-            print("\t".join([str(x) for x in header]), file=output)
-        else:
-            raise Exception("The length of results and header is not consistent")
+        print("\t".join([str(x) for x in header]), file=output)
 
     print("\t".join([str(x) for x in first_line]), file=output)
     for line in results:

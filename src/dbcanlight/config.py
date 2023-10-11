@@ -8,8 +8,8 @@ db_path.cazyme_hmms = cfg_dir / "cazyme.hmm"
 db_path.subs_hmms = cfg_dir / "substrate.hmm"
 db_path.subs_mapper = cfg_dir / "substrate_mapping.tsv"
 
-header = SimpleNamespace()
-header.hmmsearch = [
+headers = SimpleNamespace()
+headers.hmmsearch = [
     "HMM_Profile",
     "Profile_Length",
     "Gene_ID",
@@ -22,6 +22,6 @@ header.hmmsearch = [
     "Coverage",
 ]
 
-header.substrate = deepcopy(header.hmmsearch)
-header.substrate.pop(0)
-header.substrate[0:0] = ["dbCAN_subfam", "Subfam_Composition", "Subfam_EC", "Substrate"]
+headers.substrate = deepcopy(headers.hmmsearch)
+headers.substrate.pop(0)
+headers.substrate[0:0] = ["dbCAN_subfam", "Subfam_Composition", "Subfam_EC", "Substrate"]

@@ -20,7 +20,7 @@ else:
 
 from pathlib import Path
 
-from dbcanlight.config import db_path, header
+from dbcanlight.config import db_path, headers
 from dbcanlight.utils import check_db, writer
 
 
@@ -39,6 +39,8 @@ def get_subs_dict() -> dict[set]:
 
 def substrate_mapping(filtered_results: Iterator[list], subs_dict: dict[set]) -> Iterator[list]:
     for line in filtered_results:
+        if line == headers.hmmsearch:
+            continue
         subfam = None
         sub_composition = []
         sub_ec = []
@@ -105,6 +107,8 @@ def main():
         logger.setLevel("ERROR")
         for handler in logger.handlers:
             handler.setLevel("ERROR")
+    else:
+        args.output = Path(args.output)
 
     if args.verbose:
         logger.setLevel("DEBUG")
@@ -114,11 +118,7 @@ def main():
     check_db(db_path.subs_mapper)
     with open(args.input, "r") as f:
         results = substrate_mapping(csv.reader(f, delimiter="\t"), subs_dict=get_subs_dict())
-        if args.output == sys.stdout:
-            out = args.output
-        else:
-            out = Path(args.output) / "substrates.tsv"
-        writer(results, out, header.substrate)
+        writer(results, args.output)
 
 
 main.__name__ = "dbcanLight-subparser"
