@@ -30,12 +30,13 @@ To test run on the example files, please cd into the folder **example**.
 cd example
 ```
 
-A protein fasta file **protein.faa** can be found under the folder.
+A protein fasta file **example.faa** can be found under the folder.
+In additional, there is a domtblout output **hmmsearch_output**, which is generated from **example.faa** using cli hmmsearch against dbcan substrate database.
 
 Run the dbcan cazyme search with 8 cpus:
 
 ```
-dbcanlight -i protein.faa -m cazyme -t 8
+dbcanlight -i example.faa -m cazyme -t 8
 ```
 
 By default the output will be directed to stdout. Note that all the logs (below error level) will be suppressed when no output file is specified.
@@ -43,7 +44,7 @@ By default the output will be directed to stdout. Note that all the logs (below 
 Output to a file by specifying `-o/--output [output directory]`.
 
 ```
-dbcanlight -i protein.faa -o output -m cazyme -t 8
+dbcanlight -i example.faa -o output -m cazyme -t 8
 ```
 
 The results will be output to the folder **output** with the basename "**cazymes.tsv**" under `cazyme` mode or "**substrates.tsv**" under `sub` mode.
@@ -57,7 +58,7 @@ The example below demonstrates searching with a block containing 10,000 sequence
 repeating the process until all the sequences have been processed.
 
 ```
-dbcanlight -i protein.faa -o output -m cazyme -b 10000 -t 8
+dbcanlight -i example.faa -o output -m cazyme -b 10000 -t 8
 ```
 
 Please use `dbcanLight --help` to see more details.
@@ -70,7 +71,7 @@ If a gene have multiple hits and these hits are overlapped over 50%, only the hi
 The output will be a 10-column tsv. (hmm_name, hmm_length, gene_name, gene_length, evalue, hmm_from, hmm_to, gene_from, gene_to, coverage)
 
 A file **hmmsearch_output** under **example** was from cli hmmsearch with `--domtblout` enabled.
-We can filter the results and converted to th 10-column tsv by:
+We can filter the results and converted to the 10-column tsv by:
 
 ```
 dbcanLight-hmmparser -i hmmsearch.out
@@ -81,6 +82,13 @@ Please use `dbcanLight-hmmparser --help` to see more details.
 The script `dbcanLight-subparser` is used to map HMM profiles to its potential substrates.
 Note that if your results is in domtblout format, you should first use `dbcanLight-subparser` to convert it into a 10-column tsv.
 Use `dbcanLight-subparser --help` to see more details.
+
+Since the results in **hmmsearch_output** under **example** was obtained from search against substrate database,
+users can *pipe* the output from `dbcanLight-hmmparser` to `dbcanLight-subparser` to get the results:
+
+```
+dbcanLight-hmmparser -i hmmsearch.out | dbcanLight-subparser -i /dev/stdin
+```
 
 ## Requirements
 

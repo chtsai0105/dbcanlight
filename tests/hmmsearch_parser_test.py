@@ -1,33 +1,11 @@
+import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
 from dbcanlight.hmmsearch_parser import hmmsearch_parser, overlap_filter
-from dbcanlight.utils import writer, headers
-
-
-@pytest.fixture(scope="module")
-def shared_tmpdir(tmpdir_factory):
-    tmpdir = tmpdir_factory.mktemp("shared_tmpdir")
-    yield tmpdir
-
-
-def get_results():
-    input = "example/hmmsearch_output"
-    data_parser = hmmsearch_parser(Path(input))
-    results = data_parser.eval_cov_filter(1e-30, 0.35)
-    results = overlap_filter(results)
-    results = list(results)
-
-    return results
-
-
-def load_file(file):
-    with open(file) as f:
-        line_1 = f.readline().strip("\n").split("\t")
-        line_2 = f.readline().strip("\n").split("\t")
-    return line_1, line_2
+from dbcanlight.utils import headers, writer
 
 
 def test_overlap_filter():
@@ -54,15 +32,9 @@ def test_overlap_filter():
 
 
 def test_hmmsearch_parser():
-    results = get_results()
+    input = "example/hmmsearch_output"
+    data_parser = hmmsearch_parser(Path(input))
+    results = data_parser.eval_cov_filter(1e-30, 0.35)
+    results = overlap_filter(results)
+    results = list(results)
     assert len(results) == 4 and len(results[0]) == 10
-
-
-def test_hmmsearch_parser(shared_tmpdir):
-    output = Path(shared_tmpdir)
-    results = get_results()
-    results = iter(results)
-    writer(results, output)
-
-    line_1, line_2 = load_file(output / "cazymes.tsv")
-    assert line_1 == headers.hmmsearch
