@@ -69,6 +69,15 @@ jobs:
 
       - name: Install package
         run: pip install .
+      
+      - name: Cache external data
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.dbcanlight/cazyme.hmm
+            ~/.dbcanlight/substrate_mapping.tsv
+            ~/.dbcanlight/substrate.hmm
+          key: dbcanlight-external
 
       - name: Test with pytest
         run: pytest
