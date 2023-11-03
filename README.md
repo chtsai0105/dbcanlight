@@ -113,7 +113,7 @@ To avoid messing around the base environment, try to create a conda/virturl env 
 Install the package through pip
 
 ```
-cd dbcanLight-1.0.0
+cd dbcanLight-1.0.2
 pip install .
 ```
 
