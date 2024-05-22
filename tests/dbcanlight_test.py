@@ -10,7 +10,7 @@ else:
 from pathlib import Path
 
 from dbcanlight.config import headers
-from dbcanlight.dbcanlight import dbcan_runner, hmmsearch_module
+from dbcanlight.dbcanlight import search, hmmsearch_module
 
 input = "example/example.faa"
 evalue = 1e-15

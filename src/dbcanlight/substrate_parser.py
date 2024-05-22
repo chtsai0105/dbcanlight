@@ -13,12 +13,8 @@ try:
 except ImportError:
     from importlib_metadata import version
 
-if sys.version_info >= (3, 9):
-    from collections.abc import Iterator
-else:
-    from typing import Iterator
-
 from pathlib import Path
+from typing import Iterator
 
 from dbcanlight.config import db_path, headers
 from dbcanlight.utils import check_db, writer

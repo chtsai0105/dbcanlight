@@ -6,22 +6,13 @@ import csv
 import logging
 import sys
 import textwrap
-
-try:
-    from importlib.metadata import version
-except ImportError:
-    from importlib_metadata import version
-
-if sys.version_info >= (3, 9):
-    from collections.abc import Iterator
-else:
-    from typing import Iterator
-
 from operator import itemgetter
 from pathlib import Path
+from typing import Iterator, Generator
 
 from Bio import SearchIO
 
+from dbcanlight import __version__
 from dbcanlight.utils import writer
 
 
@@ -74,7 +65,7 @@ class hmmsearch_parser:
         return [results]
 
 
-def overlap_filter(results_gen: Iterator[dict[list]]) -> Iterator[list]:
+def overlap_filter(results_gen: Iterator[dict[list[list]]]) -> Generator[list, None, None]:
     for results in results_gen:
         for gene in sorted(results.keys()):
             hits = results[gene]
@@ -120,22 +111,21 @@ def main():
     *2 - domtblout format:
         hmmsearch output with --domtblout enabled
     """
-    logging.basicConfig(format=f"%(asctime)s {main.__name__} %(levelname)s %(message)s", level="INFO")
+    module_name = "dbcanLight-hmmparser"
+    logging.basicConfig(format=f"%(asctime)s {module_name} %(levelname)s %(message)s", level="INFO")
     logger = logging.getLogger()
 
     parser = argparse.ArgumentParser(
-        prog=main.__name__,
+        prog=module_name,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(main.__doc__),
     )
-    parser.add_argument(
-        "-i", "--input", type=str, required=True, help="CAZyme searching output in dbcan or hmmsearch format"
-    )
+    parser.add_argument("-i", "--input", type=str, required=True, help="CAZyme searching output in dbcan or hmmsearch format")
     parser.add_argument("-o", "--output", default=sys.stdout, help="Output file path (default=stdout)")
     parser.add_argument("-e", "--evalue", type=float, default=1e-15, help="Reporting evalue cutoff (default=1e-15)")
     parser.add_argument("-c", "--coverage", type=float, default=0.35, help="Reporting coverage cutoff (default=0.35)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
-    parser.add_argument("-V", "--version", action="version", version=version("dbcanLight"))
+    parser.add_argument("-V", "--version", action="version", version=__version__)
 
     args = parser.parse_args()
 
@@ -156,8 +146,6 @@ def main():
     results = overlap_filter(results)
     writer(results, args.output)
 
-
-main.__name__ = "dbcanLight-hmmparser"
 
 if __name__ == "__main__":
     main()
