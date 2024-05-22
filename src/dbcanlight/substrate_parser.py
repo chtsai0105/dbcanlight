@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Iterator
 
 from dbcanlight.config import db_path, headers
-from dbcanlight.utils import check_db, writer
+from dbcanlight._utils import check_db, writer
 
 
 def get_subs_dict() -> dict[set]:

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from dbcanlight.hmmsearch_parser import hmmsearch_parser, overlap_filter
-from dbcanlight.utils import headers, writer
+from dbcanlight._utils import headers, writer
 
 
 def test_overlap_filter():

@@ -13,7 +13,7 @@ from typing import Iterator, Generator
 from Bio import SearchIO
 
 from dbcanlight import __version__
-from dbcanlight.utils import writer
+from dbcanlight._utils import writer
 
 
 class hmmsearch_parser:

@@ -3,7 +3,9 @@ from pathlib import Path
 from typing import Generator
 
 import pyhmmer
+from _utils import check_db
 
+import dbcanlight.config as config
 from dbcanlight.hmmsearch_parser import overlap_filter
 from dbcanlight.substrate_parser import get_subs_dict, substrate_mapping
 
@@ -72,6 +74,7 @@ class hmmsearch_module:
                 yield self._run_hmmsearch(seq_block, evalue, coverage, threads)
 
 
+@check_db(config.db_path.cazyme_hmms)
 def hmmsearch(
     input: str | Path, hmms: str | Path, *, evalue: float = 1e-15, coverage: float = 0.35, threads: int = 1, blocksize: int = None
 ):
@@ -80,7 +83,7 @@ def hmmsearch(
     results = overlap_filter(results)
     return results
 
-
+@check_db(config.db_path.subs_hmms, config.db_path.subs_mapper)
 def subs_search(
     input: str | Path, hmms: str | Path, *, evalue: float = 1e-15, coverage: float = 0.35, threads: int = 1, blocksize: int = None
 ):

@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 from dbcanlight.config import headers
-from dbcanlight.utils import writer
+from dbcanlight._utils import writer
 
 cazyme_input = [
     ["a.hmm", 674, "scof1", 966, 3.6e-269, 1, 674, 163, 961, 0.999],

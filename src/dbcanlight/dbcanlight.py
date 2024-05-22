@@ -11,7 +11,7 @@ from pathlib import Path
 import dbcanlight.config as config
 from dbcanlight import __name__, __version__
 from dbcanlight.libsearch import diamond, hmmsearch, subs_search
-from dbcanlight.utils import check_db, writer
+from dbcanlight._utils import writer
 
 
 class _CustomHelpFormatter(argparse.HelpFormatter):
