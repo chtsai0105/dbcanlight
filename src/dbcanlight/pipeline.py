@@ -1,5 +1,7 @@
 """Functions for each module's pipeline."""
 
+from __future__ import annotations
+
 import csv
 import logging
 import re

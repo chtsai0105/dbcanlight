@@ -1,5 +1,7 @@
 """Utilities for package (internal use only)."""
 
+from __future__ import annotations
+
 import argparse
 import logging
 import re
