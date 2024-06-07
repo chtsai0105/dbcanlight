@@ -156,6 +156,12 @@ curl -o $HOME/.dbcanlight/substrate.hmm https://bcb.unl.edu/dbCAN2/download/Data
 curl -o $HOME/.dbcanlight/cazydb.fa https://bcb.unl.edu/dbCAN2/download/Databases/CAZyDB.07262023.fa
 ```
 
+Next, build the diamond database by the following cmd:
+
+```
+diamond makedb --in ~/.dbcanlight/cazydb.fa --db ~/.dbcanlight/cazydb.dmnd -t 4
+```
+
 ### Install additional package for developing (developer only)
 
 Developer should clone the GitHub project directly instead of downloading from the releases. Some of the files for developing
