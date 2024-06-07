@@ -1,4 +1,4 @@
-name: dbcanLight
+name: dbcanlight
 channels:
   - conda-forge
   - bioconda

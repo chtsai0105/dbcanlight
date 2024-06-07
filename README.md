@@ -185,6 +185,13 @@ For convenience we also provide the additional conda env file. Please use the `d
 conda env update -f dev_additional_packages.yml
 ```
 
+Lastly, activate the environment and install the pre-commit hook to the repo:
+
+```
+conda activate dbcanlight
+pre-commit install
+```
+
 ## Benchmark
 
 The performance test was done on a protein fasta predicted by Prodigal with 9,360 sequences (3.0 MB in size). 3 rounds of test
