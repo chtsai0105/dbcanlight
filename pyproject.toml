@@ -1,18 +1,14 @@
 [build-system]
-requires = [
-  "setuptools>=61.0",
-  "pytest>=6.0",
-]
+requires = ["setuptools>=61.0", "pytest>=6.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dbcanLight"
+name = "dbcanlight"
 version = "1.0.2"
-authors = [
-  { name="Cheng-Hung Tsai", email="chenghung.tsai@email.ucr.edu" },
-]
-license = {file = "LICENSE"}
-description = "A lightweight rewrite of run_dbcan"
+authors = [{ name = "Cheng-Hung Tsai", email = "chenghung.tsai@email.ucr.edu" }]
+maintainers = [{ name = "Cheng-Hung Tsai", email = "chenghung.tsai@email.ucr.edu" }]
+license = { file = "LICENSE" }
+description = "A lightweight version of run_dbcan for CAZyme annotation."
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
@@ -28,20 +24,18 @@ classifiers = [
 dynamic = ["dependencies"]
 
 [project.scripts]
-dbcanLight = "dbcanlight.dbcanlight:main"
-dbcanLight-hmmparser = "dbcanlight.hmmsearch_parser:main"
-dbcanLight-subparser = "dbcanlight.substrate_parser:main"
+dbcanlight = "dbcanlight.__main__:main"
+dbcanlight-hmmparser = "dbcanlight.hmmsearch_parser:main"
+dbcanlight-subparser = "dbcanlight.substrate_parser:main"
 
 [project.urls]
-"Homepage" = "https://github.com/chtsai0105/dbcanLight"
-"Bug Tracker" = "https://github.com/chtsai0105/dbcanLight/issues"
+"Homepage" = "https://github.com/chtsai0105/dbcanlight"
+"Bug Tracker" = "https://github.com/chtsai0105/dbcanlight/issues"
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = { file = ["requirements.txt"] }
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q"
-testpaths = [
-  "tests",
-]
+testpaths = ["tests"]

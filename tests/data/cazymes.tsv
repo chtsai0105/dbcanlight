@@ -1,0 +1,4 @@
+HMM_Profile	Profile_Length	Gene_ID	Gene_Length	Evalue	Profile_Start	Profile_End	Gene_Start	Gene_End	Coverage
+AA1_1	303	sp|Q99055|LAC4_TRAVI	520	1.5e-162	1	302	37	337	0.993
+GH5_4	276	tr|D4P8C6|D4P8C6_9BACI	569	1.8e-91	2	276	66	346	0.993
+CBM46	87	tr|D4P8C6|D4P8C6_9BACI	569	1.6e-33	1	86	375	460	0.977

@@ -1,36 +1,43 @@
 #!/usr/bin/env python3
+"""Hmmsearch-parser module."""
+
 from __future__ import annotations
 
 import argparse
 import csv
 import logging
-import sys
-import textwrap
 from operator import itemgetter
 from pathlib import Path
-from typing import Iterator, Generator
+from typing import Generator, Iterator, Sequence
 
 from Bio import SearchIO
 
-from dbcanlight import __version__
-from dbcanlight._utils import writer
+import dbcanlight._config as _config
+from dbcanlight import __version__, entry_point_map
+from dbcanlight._utils import args_parser, writer
 
 
-class hmmsearch_parser:
-    def __init__(self, input: str):
+class HmmsearchParser:
+    """Parser class that help to process hmmer3/dbcanLight hmmsearch output."""
+
+    def __init__(self, input: str | Path) -> None:
+        """Initiate the object, determine whether the input is hmmer3 or dbcan format."""
+        input = Path(input)
         try:
-            self._input = self._hmmer_reader(input)
+            self._data = self._hmmer_reader(input)
             logging.info("Input is hmmer3 format")
-            self._dbcanformat = False
         except AssertionError:
-            f = open(input, "r")
-            logging.info("Input is dbcan format")
-            self._dbcanformat = True
-            self._input = csv.reader(f, delimiter="\t")
+            self._data = self._dbcan_reader(input)
 
-    def _hmmer_reader(self, input: str) -> list[list]:
+    @property
+    def data(self) -> list[list]:
+        """Return processed data."""
+        return self._data
+
+    def _hmmer_reader(self, input: Path) -> list[list]:
+        """Reader for files in hmmer3 domtblout format."""
         lines = []
-        with open(input, "r") as f:
+        with open(input) as f:
             for hmm in SearchIO.parse(f, "hmmsearch3-domtab"):
                 for hit in hmm.hits:
                     for hsp in hit.hsps:
@@ -49,11 +56,42 @@ class hmmsearch_parser:
                                 cov,
                             ]
                         )
+        self._dbcanformat = False
         return lines
 
-    def eval_cov_filter(self, evalue: float, coverage: float) -> list[dict[list[list]]]:
+    def _dbcan_reader(self, input: Path) -> list[list]:
+        """Reader for files in dbcan format."""
+        with open(input) as f:
+            logging.info("Input is dbcan format")
+            first_3_lines = f.readline() + f.readline() + f.readline()
+            try:
+                dialect = csv.Sniffer().has_header(first_3_lines)
+            except csv.Error:
+                raise RuntimeError("Cannot found delimiter. The input does not appear to be in table format.")
+            first_line_idx = 1 if dialect else 0
+            first_line = first_3_lines.strip().split("\n")[first_line_idx].split("\t")
+
+            if len(first_line) == 10:
+                try:
+                    [int(first_line[i]) for i in (1, 3, 5, 6, 7, 8)]
+                    [float(first_line[i]) for i in (4, 9)]
+                except ValueError:
+                    raise RuntimeError("Input is neither hmmer3 nor dbcan format.")
+                self._dbcanformat = True
+            else:
+                raise RuntimeError("Input is neither hmmer3 nor dbcan format.")
+
+            f.seek(0)
+            reader = csv.reader(f, delimiter="\t")
+            if dialect:
+                next(reader, None)
+            lines = [(line) for line in reader]
+        return lines
+
+    def eval_cov_filter(self, *, evalue: float, coverage: float) -> Generator[dict[str, list[list]], None, None]:
+        """Filter the hits by the evalue."""
         results = {}
-        for line in self._input:
+        for line in self._data:
             if self._dbcanformat:
                 # 4: evalue; 9: coverage; 7: domain_from; 8: domain_to
                 line[4], line[9] = float(line[4]), float(line[9])
@@ -62,13 +100,14 @@ class hmmsearch_parser:
                 continue
             results.setdefault(line[2], []).append(line)
         logging.info(f"Found {len(results)} genes have hits")
-        return [results]
+        yield results
 
 
-def overlap_filter(results_gen: Iterator[dict[list[list]]]) -> Generator[list, None, None]:
-    for results in results_gen:
-        for gene in sorted(results.keys()):
-            hits = results[gene]
+def overlap_filter(results: Sequence[dict[str, list[list]]] | Iterator[dict[str, list[list]]]) -> Generator[list, None, None]:
+    """Filter the overlapped hits."""
+    for results_batch in results:
+        for gene in sorted(results_batch.keys()):
+            hits = results_batch[gene]
             if len(hits) > 1:
                 # Sorted by the gene_from
                 hits = sorted(hits, key=itemgetter(7))
@@ -95,56 +134,51 @@ def overlap_filter(results_gen: Iterator[dict[list[list]]]) -> Generator[list, N
                         # If not overlapped than move the pointer
                         idx += 1
                 logging.debug(f"{gene}: {len(hits)} hit(s) passed the filter")
+            else:
+                continue
             for hit in hits:
                 hit[4], hit[9] = f"{hit[4]:0.1e}", f"{hit[9]:0.3}"
                 yield hit
 
 
-def main():
+def main(args: list[str] | None = None) -> int:
     """
-    dbcanLight hmmsearch parser.
-    Parse the CAZyme searching output in dbcan[*1] or domtblout format[*2], filter with the given evalue and coverage
-    cutoff, and output in dbcan format.
+    Dbcanlight hmmsearch parser.
 
-    *1 - dbcan format: hmm_name, hmm_length, gene_name, gene_length, evalue, hmm_from, hmm_to, gene_from, gene_to,
-        coverage. (10 columns)
-    *2 - domtblout format:
-        hmmsearch output with --domtblout enabled
+    Parse the CAZyme searching output in dbcan[*1] or domtblout format[*2], filter with the given evalue and coverage cutoff, and
+    output in dbcan format.
+
+    *1 - dbcan format: hmm_name, hmm_length, gene_name, gene_length, evalue, hmm_from, hmm_to, gene_from, gene_to, coverage. (10
+    columns)
+
+    *2 - domtblout format: hmmsearch output with --domtblout enabled
     """
-    module_name = "dbcanLight-hmmparser"
-    logging.basicConfig(format=f"%(asctime)s {module_name} %(levelname)s %(message)s", level="INFO")
-    logger = logging.getLogger()
+    return args_parser(_menu, args, prog=entry_point_map[__name__], description=main.__doc__)
 
-    parser = argparse.ArgumentParser(
-        prog=module_name,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent(main.__doc__),
+
+def _run(input: str | Path, output: str | Path, **kwargs) -> None:
+    """Process the data."""
+    data_parser = HmmsearchParser(input)
+    results = data_parser.eval_cov_filter(**kwargs)
+    results = overlap_filter(results)
+    writer(results, Path(output), header=_config.headers.cazyme)
+
+
+def _menu(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    """Menu for this entry point."""
+    parser.add_argument(
+        "-i", "--input", metavar="file", type=str, required=True, help="CAZyme search output in dbcan or hmmsearch format"
     )
-    parser.add_argument("-i", "--input", type=str, required=True, help="CAZyme searching output in dbcan or hmmsearch format")
-    parser.add_argument("-o", "--output", default=sys.stdout, help="Output file path (default=stdout)")
-    parser.add_argument("-e", "--evalue", type=float, default=1e-15, help="Reporting evalue cutoff (default=1e-15)")
-    parser.add_argument("-c", "--coverage", type=float, default=0.35, help="Reporting coverage cutoff (default=0.35)")
+    parser.add_argument("-o", "--output", metavar="file", default="./cazymes.tsv", help="Output file")
+    parser.add_argument("-e", "--evalue", metavar="float", default=1e-15, help="Evalue cutoff")
+    parser.add_argument(
+        "-c", "--coverage", metavar="float", type=float, default=0.35, help="Coverage cutoff (not applicable on diamond)"
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
     parser.add_argument("-V", "--version", action="version", version=__version__)
+    parser.set_defaults(func=_run)
 
-    args = parser.parse_args()
-
-    if args.output == sys.stdout:
-        logger.setLevel("ERROR")
-        for handler in logger.handlers:
-            handler.setLevel("ERROR")
-    else:
-        args.output = Path(args.output)
-
-    if args.verbose:
-        logger.setLevel("DEBUG")
-        for handler in logger.handlers:
-            handler.setLevel("DEBUG")
-
-    data_parser = hmmsearch_parser(args.input)
-    results = data_parser.eval_cov_filter(args.evalue, args.coverage)
-    results = overlap_filter(results)
-    writer(results, args.output)
+    return parser
 
 
 if __name__ == "__main__":

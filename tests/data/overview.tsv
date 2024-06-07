@@ -1,0 +1,4 @@
+Gene_ID	EC	cazyme_fam	sub_fam	diamond_fam	Substrate	#ofTools
+sp|Q99055|LAC4_TRAVI	1.10.3.2:77	AA1_1(37-337)	AA1_e33	AA1_1	lignin	3
+tr|D4P8C6|D4P8C6_9BACI	3.2.1.4:6	GH5_4(66-346)+CBM46(375-460)	CBM46_e1+GH5_e222	3.2.1.4+CBM46+GH5_4	beta-glucan+cellulose	3
+sp|P04045|PHSL1_SOLTU	2.4.1.1:158	-	GT35_e0	2.4.1.1+GT35	-	2

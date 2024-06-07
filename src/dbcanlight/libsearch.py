@@ -1,95 +1,158 @@
+"""Functions for hmmsearch."""
+
 import logging
+import subprocess
 from pathlib import Path
 from typing import Generator
 
 import pyhmmer
-from _utils import check_db
 
-import dbcanlight.config as config
+import dbcanlight._config as _config
+from dbcanlight._utils import check_db
 from dbcanlight.hmmsearch_parser import overlap_filter
-from dbcanlight.substrate_parser import get_subs_dict, substrate_mapping
+from dbcanlight.substrate_parser import substrate_mapping
 
 
-class hmmsearch_module:
-    def __init__(self, faa_file: Path, hmm_file: Path, blocksize=None):
-        self._faa = faa_file
-        self._hmm_file = hmm_file
-        self._blocksize = blocksize
-
-    def load_hmms(self) -> None:
-        f = pyhmmer.plan7.HMMFile(self._hmm_file)
-        if f.is_pressed():
-            self._hmms = f.optimized_profiles()
-        else:
-            self._hmms = list(f)
-
-        self._hmms_length = {}
-        for hmm in self._hmms:
-            self._hmms_length[hmm.name.decode()] = hmm.M
-        if f.is_pressed():
-            self._hmms.rewind()
-
-    def _run_hmmsearch(
-        self, sequences: pyhmmer.easel.DigitalSequenceBlock, evalue: float, coverage: float, threads: int
-    ) -> dict[list[list]]:
-        results = {}
-        logging.debug("Start hmmsearch")
-        for hits in pyhmmer.hmmsearch(self._hmms, sequences, cpus=threads):
-            cog = hits.query_name.decode()
-            cog_length = self._hmms_length[cog]
-            for hit in hits:
-                for domain in hit.domains:
-                    hmm_from = domain.alignment.hmm_from
-                    hmm_to = domain.alignment.hmm_to
-                    cov = (hmm_to - hmm_from) / cog_length
-                    if domain.i_evalue > evalue or cov < coverage:
-                        continue
-                    results.setdefault(hit.name.decode(), []).append(
-                        [
-                            cog,
-                            cog_length,
-                            hit.name.decode(),
-                            len(sequences[self._kh[hit.name]]),
-                            domain.i_evalue,
-                            hmm_from,
-                            hmm_to,
-                            domain.alignment.target_from,
-                            domain.alignment.target_to,
-                            cov,
-                        ]
-                    )
-        logging.info(f"Found {len(results)} genes have hits")
-        return results
-
-    def run(self, evalue: float, coverage: float, threads: int = 0) -> Generator[dict[list[list]], None, None]:
-        self.load_hmms()
-        with pyhmmer.easel.SequenceFile(self._faa, digital=True) as seq_file:
-            while True:
-                seq_block = seq_file.read_block(sequences=self._blocksize)
-                if not seq_block:
-                    break
-                self._kh = pyhmmer.easel.KeyHash()
-                for seq in seq_block:
-                    self._kh.add(seq.name)
-                yield self._run_hmmsearch(seq_block, evalue, coverage, threads)
-
-
-@check_db(config.db_path.cazyme_hmms)
-def hmmsearch(
+@check_db(_config.db_path.cazyme_hmms)
+def cazyme_search(
     input: str | Path, hmms: str | Path, *, evalue: float = 1e-15, coverage: float = 0.35, threads: int = 1, blocksize: int = None
-):
-    finder = hmmsearch_module(Path(input), hmms, blocksize)
-    results = finder.run(evalue=evalue, coverage=coverage, threads=threads)
+) -> Generator[list, None, None]:
+    """Function for cazyme hmmsearch. Returns a generator of list of results."""
+    return _hmmsearch_pipeline(Path(input), Path(hmms), evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize)
+
+
+@check_db(_config.db_path.subs_hmms, _config.db_path.subs_mapper)
+def subs_search(
+    input: str | Path, hmms: str | Path, *, evalue: float = 1e-15, coverage: float = 0.35, threads: int = 1, blocksize: int = None
+) -> Generator[list, None, None]:
+    """Function for substrate hmmsearch. Returns a generator of list of results."""
+    return substrate_mapping(
+        _hmmsearch_pipeline(Path(input), Path(hmms), evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize)
+    )
+
+
+@check_db(_config.db_path.diamond)
+def diamond(
+    input: str | Path, *, evalue: float = 1e-102, coverage: float = 0.35, threads: int = 1
+) -> Generator[list, None, None]:
+    """Function for cazyme diamond blastp. Returns a generator of list of results."""
+    cmd = [
+        "diamond",
+        "blastp",
+        "--db",
+        str(_config.db_path.diamond),
+        "--query",
+        str(input),
+        "--evalue",
+        str(evalue),
+        "--threads",
+        str(threads),
+        "--query-cover",
+        str(coverage),
+        "--max-target-seqs",
+        "1",
+        "--outfmt",
+        "6",
+    ]
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
+        while True:
+            stdout_line = p.stdout.readline()
+            stderr_line = p.stderr.readline()
+            if stdout_line == b"" and stderr_line == b"" and p.poll() is not None:
+                break
+
+            if stdout_line:
+                yield stdout_line.decode().strip().split("\t")
+
+            if stderr_line:
+                raise RuntimeError(stderr_line.decode())
+
+
+def _hmmsearch_pipeline(
+    input: Path,
+    hmms: Path,
+    *,
+    evalue: float = 1e-15,
+    coverage: float = 0.35,
+    threads: int = 1,
+    blocksize: int | None = None,
+) -> Generator[list, None, None]:
+    """Hmmsearch pipeline."""
+    hmms = _load_hmms(hmms)
+    results = _load_seqs_and_hmmsearch(input, hmms, evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize)
     results = overlap_filter(results)
     return results
 
-@check_db(config.db_path.subs_hmms, config.db_path.subs_mapper)
-def subs_search(
-    input: str | Path, hmms: str | Path, *, evalue: float = 1e-15, coverage: float = 0.35, threads: int = 1, blocksize: int = None
-):
-    results = substrate_mapping(hmmsearch(input, hmms, evalue, coverage, threads, blocksize), get_subs_dict())
+
+def _load_hmms(hmm_file: Path) -> pyhmmer.plan7.HMMPressedFile | pyhmmer.plan7.HMMFile:
+    """Load hmm profiles."""
+    f = pyhmmer.plan7.HMMFile(hmm_file)
+    if f.is_pressed():
+        hmms = f.optimized_profiles()
+        hmms.rewind()
+        logging.debug("Use hmm pressed file.")
+        return hmms
+    else:
+        logging.debug("Use regular hmm file.")
+        return f
+
+
+def _load_seqs_and_hmmsearch(
+    input: Path,
+    hmms: pyhmmer.plan7.HMMPressedFile | pyhmmer.plan7.HMMFile,
+    *,
+    evalue: float = 1e-15,
+    coverage: float = 0.35,
+    threads: int = 1,
+    blocksize: int | None = None,
+) -> Generator[dict[str, list[list]], None, None]:
+    """Load query sequences and run hmmsearch by batch."""
+    with pyhmmer.easel.SequenceFile(input, digital=True) as seq_file:
+        block_start = 0
+        while True:
+            seq_block = seq_file.read_block(sequences=blocksize)
+            if not seq_block:
+                break
+            if blocksize:
+                logging.debug(f"Hmmsearch on sequence {block_start}-{block_start + blocksize}...")
+            yield _run_hmmsearch(seq_block, hmms, evalue=evalue, coverage=coverage, threads=threads)
+            if blocksize:
+                block_start += blocksize
+
+
+def _run_hmmsearch(
+    sequences: pyhmmer.easel.SequenceBlock,
+    hmms: pyhmmer.plan7.HMMPressedFile | pyhmmer.plan7.HMMFile,
+    *,
+    evalue: float = 1e-15,
+    coverage: float = 0.35,
+    threads: int = 1,
+) -> dict[str, list[list]]:
+    """Run hmmsearch."""
+    results = {}
+    for hits in pyhmmer.hmmsearch(hmms, sequences, cpus=threads):
+        cog = hits.query_name.decode()
+        cog_length = hits.query_length
+        for hit in hits:
+            for domain in hit.domains:
+                hmm_from = domain.alignment.hmm_from
+                hmm_to = domain.alignment.hmm_to
+                cov = (hmm_to - hmm_from) / cog_length
+                if domain.i_evalue > evalue or cov < coverage:
+                    continue
+                results.setdefault(hit.name.decode(), []).append(
+                    [
+                        cog,
+                        cog_length,
+                        hit.name.decode(),
+                        hit.length,
+                        domain.i_evalue,
+                        hmm_from,
+                        hmm_to,
+                        domain.alignment.target_from,
+                        domain.alignment.target_to,
+                        cov,
+                    ]
+                )
+    logging.info(f"Found {len(results)} genes have hits.")
     return results
-
-
-def diamond():
-    pass

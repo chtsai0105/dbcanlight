@@ -1,117 +1,65 @@
-import subprocess
+import shutil
+from pathlib import Path
+from typing import Generator
+from zlib import crc32
 
 import pytest
-from dbcanlight.config import headers
 
-faa_input = "example/example.faa"
-hmm_input = "example/hmmsearch_output"
-
-
-@pytest.fixture(scope="class")
-def shared_tmpdir(tmpdir_factory):
-    tmpdir = tmpdir_factory.mktemp("shared_tmpdir")
-    yield tmpdir
+import dbcanlight._config as _config
+import dbcanlight.pipeline as pipeline
+from dbcanlight.pipeline import conclude, search
 
 
-def read_output(string):
-    return [line.split("\t") for line in [line for line in string.strip("\n").split("\n")]]
+def get_file_checksum(file: str | Path) -> int:
+    """Compute the crc checksum of a file."""
+    file = Path(file)
+    if not file.exists():
+        raise FileNotFoundError(f"{file} not found.")
+    crc = 0
+    with open(file, "rb") as f:
+        crc += crc32(f.read())
+    return crc
 
 
-class TestCazymeDetection:
-    def test_cazyme_to_file(self, shared_tmpdir):
-        subprocess.check_call(
-            ["dbcanLight", "-i", faa_input, "-o", shared_tmpdir, "-m", "cazyme", "-t", "4"], text=True
-        )
-        with open(f"{shared_tmpdir}/cazymes.tsv") as f:
-            output = read_output(f.read())
+class TestSearch:
+    input = Path("tests/data/example.faa")
 
-        assert len(output) == 5
-        assert output[0] == headers.hmmsearch
-        assert len(output[1]) == 10
+    @pytest.mark.parametrize("mode, search_func", zip(_config.avail_modes.keys(), ("cazyme_search", "subs_search", "diamond")))
+    def test_search(self, mode: str, search_func: str, monkeypatch: Generator):
+        def mock_search(*args, **kwargs):
+            return args[0]
 
-    def test_cazyme_to_stdout(self, shared_tmpdir):
-        output = subprocess.check_output(["dbcanLight", "-i", faa_input, "-m", "cazyme", "-t", "4"], text=True)
-        output = read_output(output)
-        with open(f"{shared_tmpdir}/cazymes.tsv") as f:
-            output_from_file = read_output(f.read())
+        def mock_writer(input, output, *, header):
+            return input, output, header
 
-        assert len(output) == 4
-        assert len(output[0]) == 10
-        assert output == output_from_file[1:]
+        monkeypatch.setattr(pipeline, search_func, mock_search)
+        monkeypatch.setattr(pipeline, "writer", mock_writer)
+        r = search(self.input, "output", mode=mode)
+        assert r[0] == self.input
+        assert r[1] == Path("output") / _config.avail_modes[mode]
+        assert r[2] == getattr(_config.headers, mode)
 
+    @pytest.mark.parametrize("mode", ("cazyme", "sub"))
+    def test_search_valueerror(self, tmp_path: Path, mode: str):
+        with pytest.raises(ValueError, match=r"blocksize=\d+ which is smaller than 1."):
+            search(self.input, tmp_path, mode=mode, blocksize=0)
 
-class TestHmmsearchAndSubstrateParser:
-    def test_hmmsearch_parser_to_file(self, shared_tmpdir):
-        subprocess.check_call(["dbcanLight-hmmparser", "-i", hmm_input, "-o", shared_tmpdir], text=True)
-        with open(f"{shared_tmpdir}/cazymes.tsv") as f:
-            output = read_output(f.read())
-
-        assert len(output) == 7
-        assert output[0] == headers.hmmsearch
-        assert len(output[1]) == 10
-
-    def test_hmmsearch_parser_to_stdout(self, shared_tmpdir):
-        output = subprocess.check_output(["dbcanLight-hmmparser", "-i", hmm_input], text=True)
-        output = read_output(output)
-        with open(f"{shared_tmpdir}/cazymes.tsv") as f:
-            output_from_file = read_output(f.read())
-
-        assert len(output) == 6
-        assert len(output[0]) == 10
-        assert output == output_from_file[1:]
-
-    def test_substrate_parser_to_file(self, shared_tmpdir):
-        subprocess.check_call(
-            ["dbcanLight-subparser", "-i", f"{shared_tmpdir}/cazymes.tsv", "-o", shared_tmpdir], text=True
-        )
-        with open(f"{shared_tmpdir}/substrates.tsv") as f:
-            output = read_output(f.read())
-
-        assert len(output) == 7
-        assert output[0] == headers.substrate
-        assert len(output[1]) == 13
-
-    def test_substrate_parser_to_stdout(self, shared_tmpdir):
-        output = subprocess.check_output(["dbcanLight-subparser", "-i", f"{shared_tmpdir}/cazymes.tsv"], text=True)
-        output = read_output(output)
-        with open(f"{shared_tmpdir}/substrates.tsv") as f:
-            output_from_file = read_output(f.read())
-
-        assert len(output) == 6
-        assert len(output[0]) == 13
-        assert output == output_from_file[1:]
-
-    def test_pipe_hmmsearch_to_substrate_parser(self, shared_tmpdir):
-        output = subprocess.check_output(
-            ["dbcanLight-hmmparser -i example/hmmsearch_output | dbcanLight-subparser -i /dev/stdin"],
-            shell=True,
-            text=True,
-        )
-        output = read_output(output)
-        with open(f"{shared_tmpdir}/substrates.tsv") as f:
-            output_from_file = read_output(f.read())
-
-        assert len(output) == 6
-        assert len(output[0]) == 13
-        assert output == output_from_file[1:]
+    def test_search_keyerror(self, tmp_path: Path):
+        with pytest.raises(KeyError, match=r".+ is not an available mode."):
+            search(self.input, tmp_path, mode="Invalidmode")
 
 
-class TestSubstrateDetection:
-    def test_subs_to_file(self, shared_tmpdir):
-        subprocess.check_call(["dbcanLight", "-i", faa_input, "-o", shared_tmpdir, "-m", "sub", "-t", "4"], text=True)
-        with open(f"{shared_tmpdir}/substrates.tsv") as f:
-            output = read_output(f.read())
+class TestConclude:
+    def test_conclude(self, tmp_path: Path):
+        for file in _config.avail_modes.values():
+            shutil.copy(f"tests/data/{file}", tmp_path)
+        conclude(tmp_path)
+        output = tmp_path / "overview.tsv"
+        assert output.is_file()
+        assert get_file_checksum(output) == get_file_checksum("tests/data/overview.tsv")
 
-        assert len(output) == 7
-        assert output[0] == headers.substrate
-        assert len(output[1]) == 13
-
-    def test_subs_to_stdout(self, shared_tmpdir):
-        output = subprocess.check_output(["dbcanLight", "-i", faa_input, "-m", "sub", "-t", "4"], text=True)
-        output = read_output(output)
-        with open(f"{shared_tmpdir}/substrates.tsv") as f:
-            output_from_file = read_output(f.read())
-
-        assert len(output) == 6
-        assert len(output[0]) == 13
-        assert output == output_from_file[1:]
+    @pytest.mark.parametrize("file", _config.avail_modes.values())
+    def test_conclude_systemexit(self, file: str, tmp_path: Path):
+        shutil.copy(f"tests/data/{file}", tmp_path)
+        with pytest.raises(SystemExit, match=r"Required at least 2 results to conclude but got 1. Aborted."):
+            conclude(tmp_path)

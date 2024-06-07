@@ -1,0 +1,4 @@
+qseqid	sseqid	pident	length	mismatch	gapopen	qstart	qend	sstart	send	evalue	bitscore
+sp|P04045|PHSL1_SOLTU	BAA00407.1|GT35|2.4.1.1	100	966	0	0	1	966	1	966	0.0	1931
+sp|Q99055|LAC4_TRAVI	AAB47734.1|AA1_1	100	520	0	0	1	520	1	520	0.0	1050
+tr|D4P8C6|D4P8C6_9BACI	ADD62401.1|CBM46|GH5_4|3.2.1.4	100	569	0	0	1	569	1	569	0.0	1174

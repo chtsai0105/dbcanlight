@@ -1,11 +1,39 @@
-import subprocess
-import sys
-from pathlib import Path
+from itertools import product
+from typing import Generator
 
 import pytest
 
-from dbcanlight.hmmsearch_parser import hmmsearch_parser, overlap_filter
-from dbcanlight._utils import headers, writer
+import dbcanlight.hmmsearch_parser as hmmsearch_parser
+from dbcanlight import __version__
+from dbcanlight.hmmsearch_parser import HmmsearchParser, main, overlap_filter
+
+
+class TestHmmsearchParser:
+    def test_hmmsearch_parser_dbcan_format(self):
+        data_parser = HmmsearchParser("tests/data/cazymes.tsv")
+        assert isinstance(data_parser.data, list) and len(data_parser.data) == 3
+        results = data_parser.eval_cov_filter(evalue=1e-90, coverage=0.5)
+        results = next(results)
+        assert isinstance(results, dict) and len(results) == 2
+
+    def test_hmmsearch_parser_hmmsearch_format(self):
+        data_parser = HmmsearchParser("tests/data/hmmsearch_output")
+        assert isinstance(data_parser.data, list) and len(data_parser.data) == 356
+        results = data_parser.eval_cov_filter(evalue=1e-90, coverage=0.5)
+        results = next(results)
+        assert isinstance(results, dict) and len(results) == 3
+
+    def test_hmmsearch_parser_invalid_format(self):
+        with pytest.raises(RuntimeError, match="Cannot found delimiter. The input does not appear to be in table format."):
+            HmmsearchParser("tests/data/example.faa")
+
+    def test_hmmsearch_parser_invalid_tsv_format(self):
+        with pytest.raises(RuntimeError, match="Input is neither hmmer3 nor dbcan format."):
+            HmmsearchParser("tests/data/diamond.tsv")
+
+    def test_hmmsearch_parser_invalid_format_with_10_columns(self):
+        with pytest.raises(RuntimeError, match="Input is neither hmmer3 nor dbcan format."):
+            HmmsearchParser("tests/data/bedpe.tsv")
 
 
 def test_overlap_filter():
@@ -31,10 +59,29 @@ def test_overlap_filter():
     assert list(overlap_filter(input)) == expect
 
 
-def test_hmmsearch_parser():
-    input = "example/hmmsearch_output"
-    data_parser = hmmsearch_parser(Path(input))
-    results = data_parser.eval_cov_filter(1e-30, 0.35)
-    results = overlap_filter(results)
-    results = list(results)
-    assert len(results) == 4 and len(results[0]) == 10
+def test_main_help():
+    assert main(["--help"]) == main(["-h"]) == main() == 0
+
+
+def test_main_version(capsys: pytest.CaptureFixture):
+    assert main(["--version"]) == main(["-V"])
+    captured: str = capsys.readouterr().out
+    captured = captured.split("\n")
+    assert captured[0] == captured[1] == __version__
+
+
+@pytest.mark.parametrize(
+    "input, output",
+    tuple(product(("mock_input1", "mock_input2"), ("mock_output1", "mock_output2"))),
+)
+def test_main(input: str, output: str, monkeypatch: Generator, capsys: pytest.CaptureFixture):
+    def mockreturn(**kwargs):
+        for k, v in kwargs.items():
+            print(f"{k}: {v}")
+
+    monkeypatch.setattr(hmmsearch_parser, "_run", mockreturn)
+    assert main(["-i", input, "-o", output]) == 0
+    captured: str = capsys.readouterr().out
+    captured = captured.split("\n")
+    assert f"input: {input}" in captured
+    assert f"output: {output}" in captured

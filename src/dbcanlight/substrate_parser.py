@@ -1,41 +1,40 @@
 #!/usr/bin/env python3
+"""Substrate-parser module."""
+
 from __future__ import annotations
 
 import argparse
 import csv
-import logging
 import re
-import sys
-import textwrap
-
-try:
-    from importlib.metadata import version
-except ImportError:
-    from importlib_metadata import version
-
 from pathlib import Path
-from typing import Iterator
+from typing import Generator, Iterator, Sequence
 
-from dbcanlight.config import db_path, headers
-from dbcanlight._utils import check_db, writer
-
-
-def get_subs_dict() -> dict[set]:
-    subs_dict = {}
-    with open(db_path.subs_mapper, "r") as f:
-        next(f)
-        for line in csv.reader(f, delimiter="\t"):
-            subs = set(re.split(r",[\s]|,", re.sub(r",[\s]and|[\s]and", ",", line[0])))
-            if line[4]:
-                subs_dict[line[2], line[4].strip()] = subs
-            else:
-                subs_dict[line[2], "-"] = subs
-    return subs_dict
+import dbcanlight._config as _config
+from dbcanlight import __version__, entry_point_map
+from dbcanlight._utils import args_parser, check_db, writer
+from dbcanlight.hmmsearch_parser import HmmsearchParser
 
 
-def substrate_mapping(filtered_results: Iterator[list], subs_dict: dict[set]) -> Iterator[list]:
-    for line in filtered_results:
-        if line == headers.hmmsearch:
+@check_db(_config.db_path.subs_mapper)
+def substrate_mapping(results: Sequence[list] | Iterator[list]) -> Generator[list, None, None]:
+    """Map the hmm profiles to the corresponding substrates."""
+
+    def get_subs_dict() -> dict[set]:
+        subs_dict = {}
+        with open(_config.db_path.subs_mapper) as f:
+            next(f, None)
+            for line in csv.reader(f, delimiter="\t"):
+                subs = set(re.split(r",[\s]|,", re.sub(r",[\s]and|[\s]and", ",", line[0])))
+                if line[4]:
+                    subs_dict[line[2], line[4].strip()] = subs
+                else:
+                    subs_dict[line[2], "-"] = subs
+        return subs_dict
+
+    subs_dict = get_subs_dict()
+
+    for line in results:
+        if line == _config.headers.cazyme:
             continue
         subfam = None
         sub_composition = []
@@ -46,9 +45,8 @@ def substrate_mapping(filtered_results: Iterator[list], subs_dict: dict[set]) ->
 
         for p in line[0].split("|"):
             if p.endswith(".hmm"):
-                hmm = p.split(".")[0]  # Add only the marker name without .hmm suffix
-                subfam = hmm
-                key1 = hmm.split("_")[0]
+                subfam = p
+                key1 = p.split("_")[0]
             elif len(p.split(".")) == 4:
                 sub_ec.append(p)
                 key2.append(p.split(":")[0])
@@ -72,52 +70,37 @@ def substrate_mapping(filtered_results: Iterator[list], subs_dict: dict[set]) ->
         ]
 
 
-def main():
+def main(args: list[str] | None = None) -> int:
     """
-    dbcanLight substrate parser.
-    Parse the dbcan substrate searching output in dbcan format[*1], map them against the dbcan substrate mapping
-    table[*2] and output in dbcan format. The domtblout output should first being processed by hmmsearch_parser.py
-    before mapping by this script.
+    Dbcanlight substrate parser.
 
-    *1 - dbcan format: hmm_name, hmm_length, gene_name, gene_length, evalue, hmm_from, hmm_to, gene_from, gene_to,
-        coverage. (10 columns)
-    *2 - dbcan substrate mapping table:
-        http://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv
+    Parse the dbcan substrate search output in dbcan format[*1], map them against the dbcan substrate mapping table[*2] and output
+    in dbcan format. The domtblout output should first being processed by dbcanlight-hmmparser before mapping by this script.
+
+    *1 - dbcan format: hmm_name, hmm_length, gene_name, gene_length, evalue, hmm_from, hmm_to, gene_from, gene_to, coverage. (10
+    columns)
+
+    *2 - dbcan substrate mapping table: http://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv
     """
-    logging.basicConfig(format=f"%(asctime)s {main.__name__} %(levelname)s %(message)s", level="INFO")
-    logger = logging.getLogger()
+    return args_parser(_menu, args, prog=entry_point_map[__name__], description=main.__doc__)
 
-    parser = argparse.ArgumentParser(
-        prog=main.__name__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent(main.__doc__),
-    )
-    parser.add_argument("-i", "--input", type=Path, required=True, help="dbcan-sub searching output in dbcan format")
-    parser.add_argument("-o", "--output", default=sys.stdout, help="Output file path (default=stdout)")
+
+def _run(input: str | Path, output: str | Path, **kwargs) -> None:
+    """Process the data."""
+    data_parser = HmmsearchParser(input)
+    results = substrate_mapping(data_parser.data)
+    writer(results, Path(output), header=_config.headers.sub)
+
+
+def _menu(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    """Menu for this entry point."""
+    parser.add_argument("-i", "--input", type=Path, required=True, help="dbcan-sub search output in dbcan format")
+    parser.add_argument("-o", "--output", metavar="file", default="./substrates.tsv", help="Output file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
-    parser.add_argument("-V", "--version", action="version", version=version("dbcanLight"))
+    parser.add_argument("-V", "--version", action="version", version=__version__)
+    parser.set_defaults(func=_run)
 
-    args = parser.parse_args()
-
-    if args.output == sys.stdout:
-        logger.setLevel("ERROR")
-        for handler in logger.handlers:
-            handler.setLevel("ERROR")
-    else:
-        args.output = Path(args.output)
-
-    if args.verbose:
-        logger.setLevel("DEBUG")
-        for handler in logger.handlers:
-            handler.setLevel("DEBUG")
-
-    check_db(db_path.subs_mapper)
-    with open(args.input, "r") as f:
-        results = substrate_mapping(csv.reader(f, delimiter="\t"), subs_dict=get_subs_dict())
-        writer(results, args.output)
-
-
-main.__name__ = "dbcanLight-subparser"
+    return parser
 
 
 if __name__ == "__main__":
