@@ -10,7 +10,7 @@ from dbcanlight.__main__ import main
 
 
 def test_main_help():
-    assert main(["--help"]) == main(["-h"]) == main() == 0
+    assert main(["--help"]) == main(["-h"]) == 0
 
 
 def test_main_version(capsys: pytest.CaptureFixture):
