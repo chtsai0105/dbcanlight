@@ -1,4 +1,4 @@
-name: Build diamond
+name: Download external files
 
 on: workflow_call
 
