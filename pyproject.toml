@@ -1,10 +1,9 @@
 [build-system]
-requires = ["setuptools>=61.0", "pytest>=6.0"]
+requires = ["setuptools>=61.0", "pytest>=6.0", "versioningit"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "dbcanlight"
-version = "1.0.2"
 authors = [{ name = "Cheng-Hung Tsai", email = "chenghung.tsai@email.ucr.edu" }]
 maintainers = [{ name = "Cheng-Hung Tsai", email = "chenghung.tsai@email.ucr.edu" }]
 license = { file = "LICENSE" }
@@ -21,7 +20,7 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
-dynamic = ["dependencies"]
+dynamic = ["dependencies", "version"]
 
 [project.scripts]
 dbcanlight = "dbcanlight.__main__:main"
@@ -39,3 +38,5 @@ dependencies = { file = ["requirements.txt"] }
 minversion = "6.0"
 addopts = "-ra -q"
 testpaths = ["tests"]
+
+[tool.versioningit]
