@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 from dbcanlight.libsearch import cazyme_search, subs_search, diamond
 import dbcanlight._config as _config
