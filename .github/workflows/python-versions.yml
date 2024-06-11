@@ -74,7 +74,7 @@ jobs:
           key: ${{ runner.os }}-diamond
 
       - name: Pytest
-        run: pytest --runslow -vv --cov=phyling --cov-report=xml
+        run: pytest --runslow -vv --cov=dbcanlight --cov-report=xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.4.1
