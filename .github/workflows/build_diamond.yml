@@ -1,0 +1,35 @@
+name: Build diamond
+
+on: workflow_call
+
+jobs:
+  build_diamond:
+    name: Build diamond
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cache diamond
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/diamond
+          key: ${{ runner.os }}-diamond
+
+      - name: Download diamond executable
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          curl -L -O https://github.com/bbuchfink/diamond/releases/download/v2.1.9/diamond-linux64.tar.gz
+          tar zxvf diamond-linux64.tar.gz
+
+      - name: Move executable
+        if: steps.cache.outputs.cache-hit != 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          mkdir -p ~/.local/bin
+          cp diamond ~/.local/bin/
+          chmod +x ~/.local/bin/diamond
+
+      - name: Export diamond to PATH and verify
+        run: |
+          export PATH=$PATH:$HOME/.local/bin
+          which diamond
