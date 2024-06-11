@@ -37,24 +37,13 @@ jobs:
           cap=$(grep -oP "${{ steps.repo.outputs.repo_name }}-\K\d+\.\d+\.\d+[^\s]*" README.md)
           echo "version=$cap" >> "$GITHUB_OUTPUT"
 
-      - name: Check version in pyproject.toml
-        id: pyproject
-        run: |
-          cap=$(grep -oP '^version = "\K\d+\.\d+\.\d+[^"]*' pyproject.toml)
-          echo "version=$cap" >> "$GITHUB_OUTPUT"
-
       - name: Substitute version in README.md
         if: ${{ steps.readme.outputs.version != steps.tag.outputs.version }}
         id: sub_readme
         run: sed -i 's/${{ steps.repo.outputs.repo_name }}-${{ steps.readme.outputs.version }}/${{ steps.repo.outputs.repo_name }}-${{ steps.tag.outputs.version }}/g' README.md
 
-      - name: Substitute version in pyproject.toml
-        if: ${{ steps.pyproject.outputs.version != steps.tag.outputs.version }}
-        id: sub_pyproject
-        run: sed -i 's/^version = "${{ steps.pyproject.outputs.version }}"/version = "${{ steps.tag.outputs.version }}"/' pyproject.toml
-
       - name: Push changes
-        if: steps.sub_readme.conclusion == 'success' && steps.sub_pyproject.conclusion == 'success'
+        if: steps.sub_readme.conclusion == 'success'
         run: |
           git config author.name GitHub Actions
           git config author.email actions@github.com

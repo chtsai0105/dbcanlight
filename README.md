@@ -1,6 +1,7 @@
 [![Build](https://img.shields.io/github/actions/workflow/status/chtsai0105/dbcanlight/python-versions.yml?branch=main&logo=github)](https://github.com/chtsai0105/dbcanlight/actions/workflows/python-versions.yml)
 [![Bioconda](https://img.shields.io/conda/v/bioconda/dbcanlight?logo=anaconda&color=orange)][Bioconda]
 [![Python](https://img.shields.io/badge/python-3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11_%7C_3.12-blue?logo=python)](https://github.com/chtsai0105/dbcanlight/actions/workflows/python-versions.yml)
+[![codecov](https://codecov.io/gh/chtsai0105/dbcanlight/graph/badge.svg?token=XEBUU3BRRF)](https://codecov.io/gh/chtsai0105/dbcanlight)
 [![License](https://img.shields.io/github/license/chtsai0105/dbcanlight?label=license)](https://github.com/chtsai0105/dbcanlight/blob/master/LICENSE)
 
 # dbcanlight
