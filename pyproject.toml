@@ -39,4 +39,6 @@ minversion = "6.0"
 addopts = "-ra -q"
 testpaths = ["tests"]
 
-[tool.versioningit]
+[tool.versioningit.vcs]
+method = "git"
+default-tag = "0.0.0"
