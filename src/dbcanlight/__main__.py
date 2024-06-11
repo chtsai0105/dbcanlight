@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 
 import dbcanlight._config as _config
-from dbcanlight import __author__, __version__, entry_point_map
+from dbcanlight import __author__, __entry_points__, __version__
 from dbcanlight._utils import CustomHelpFormatter, args_parser
 from dbcanlight.pipeline import build, conclude, search
 
@@ -102,7 +102,7 @@ def main(args: list[str] | None = None) -> int:
     separately. The conclude module gathers all the results made by each module and reports a brief overview.
     """
     return args_parser(
-        _menu, args, prog=entry_point_map[__name__], description=main.__doc__, epilog=f'Written by {__author__}'
+        _menu, args, prog=__entry_points__[__name__], description=main.__doc__, epilog=f'Written by {__author__}'
     )
 
 

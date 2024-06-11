@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Generator, Iterator, Sequence
 
 import dbcanlight._config as _config
-from dbcanlight import __version__, entry_point_map
+from dbcanlight import __entry_points__, __version__
 from dbcanlight._utils import args_parser, check_db, writer
 from dbcanlight.hmmsearch_parser import HmmsearchParser
 
@@ -82,7 +82,7 @@ def main(args: list[str] | None = None) -> int:
 
     *2 - dbcan substrate mapping table: http://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv
     """
-    return args_parser(_menu, args, prog=entry_point_map[__name__], description=main.__doc__)
+    return args_parser(_menu, args, prog=__entry_points__[__name__], description=main.__doc__)
 
 
 def _run(input: str | Path, output: str | Path, **kwargs) -> None:

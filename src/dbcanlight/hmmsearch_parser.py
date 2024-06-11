@@ -13,7 +13,7 @@ from typing import Generator, Iterator, Sequence
 from Bio import SearchIO
 
 import dbcanlight._config as _config
-from dbcanlight import __version__, entry_point_map
+from dbcanlight import __entry_points__, __version__
 from dbcanlight._utils import args_parser, writer
 
 
@@ -153,7 +153,7 @@ def main(args: list[str] | None = None) -> int:
 
     *2 - domtblout format: hmmsearch output with --domtblout enabled
     """
-    return args_parser(_menu, args, prog=entry_point_map[__name__], description=main.__doc__)
+    return args_parser(_menu, args, prog=__entry_points__[__name__], description=main.__doc__)
 
 
 def _run(input: str | Path, output: str | Path, **kwargs) -> None:
