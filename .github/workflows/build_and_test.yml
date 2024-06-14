@@ -8,6 +8,7 @@ on:
     branches: ["main", "dev"]
     paths: ["**.py", "requirements.txt"]
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build-diamond:
