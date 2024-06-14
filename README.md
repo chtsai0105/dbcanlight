@@ -1,20 +1,24 @@
-[![Build](https://img.shields.io/github/actions/workflow/status/chtsai0105/dbcanlight/python-versions.yml?branch=main&logo=github)](https://github.com/chtsai0105/dbcanlight/actions/workflows/python-versions.yml)
+[![Build](https://img.shields.io/github/actions/workflow/status/chtsai0105/dbcanlight/python-versions.yml?branch=main&logo=github)](https://github.com/chtsai0105/dbcanlight/actions/workflows/build_and_test.yml)
 [![Bioconda](https://img.shields.io/conda/v/bioconda/dbcanlight?logo=anaconda&color=orange)][Bioconda]
-[![Python](https://img.shields.io/badge/python-3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11_%7C_3.12-blue?logo=python)](https://github.com/chtsai0105/dbcanlight/actions/workflows/python-versions.yml)
+[![Python](https://img.shields.io/badge/python-3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11_%7C_3.12-blue?logo=python)](https://github.com/chtsai0105/dbcanlight/actions/workflows/build_and_test.yml)
 [![codecov](https://codecov.io/gh/chtsai0105/dbcanlight/graph/badge.svg?token=XEBUU3BRRF)](https://codecov.io/gh/chtsai0105/dbcanlight)
-[![License](https://img.shields.io/github/license/chtsai0105/dbcanlight?label=license)](https://github.com/chtsai0105/dbcanlight/blob/master/LICENSE)
+[![Changelog](https://img.shields.io/badge/Changelog-darkred)](https://github.com/chtsai0105/dbcanlight/blob/main/CHANGELOG.md)
+[![License](https://img.shields.io/github/license/chtsai0105/dbcanlight?label=license)](https://github.com/chtsai0105/dbcanlight/blob/main/LICENSE)
+
 
 # dbcanlight
 
 A lightweight rewrite of [run_dbcan] for better multithread performance. The previous version of run_dbcan uses hmmscan, which is
 reported to be way slow compared to hmmsearch although they're doing the same compute. It is highly recommended to [use hmmsearch
 for searching a large sequence database against a profile database][hmmscan_vs_hmmsearch] and in the latest update [run_dbcan]
-finally switch to use hmmsearch. To further improve the performance and the code readability, [pyhmmer], a Cython bindings to
-HMMER3, was used instead of the cli HMMER3 suite to run hmmsearch. My implementation also address another issue possessed in the
-original [run_dbcan] - under-performance and cpu over-spawning issue when the input contains over million of sequences. dbcanlight
-can run faster and with much lower memory consumption than the original implementation.
+finally switch to use hmmsearch.
 
-The main program `dbcanlight` comprises 3 modules - `download`, `search` and `conclude`. The download module help to download the
+To further improve the performance and the code readability, [pyhmmer], a Cython bindings to HMMER3, was used instead of the cli
+HMMER3 suite to run hmmsearch. My implementation also address another issue possessed in the original [run_dbcan] -
+under-performance and cpu over-spawning issue when the input contains over million of sequences. dbcanlight can run faster and
+with much lower memory consumption than the original implementation.
+
+The main program `dbcanlight` comprises 3 modules - `build`, `search` and `conclude`. The build module help to download the
 required databases from dbcan website. (Not implemented yet!) The search module searches against protein HMM, substrate HMM or
 diamond databases and reports the hits separately. The conclude module gathers all the results made by each module and reports a
 brief overview.
@@ -121,9 +125,9 @@ Use `dbcanlight-subparser --help` to see more details.
 
 ## Requirements
 
-- Python >= 3.7
-- [Biopython]
-- [pyhmmer]
+- [Python] >= 3.7
+- [Biopython] >= 1.81
+- [pyhmmer] >= 0.10.4
 
 ## Install
 
@@ -142,7 +146,7 @@ environment, try to create a conda/virturl env and install it inside it.
 Install the package through pip
 
 ```
-cd dbcanlight-1.0.2
+cd [decompressed source dir]
 pip install .
 ```
 
@@ -213,12 +217,14 @@ speed.
 Although hmmscan and hmmsearch are doing the same thing, the results may differ a bit since the evalue would be affected by the
 size of the database.
 
-[run_dbcan]: https://github.com/linnabrown/run_dbcan
-[hmmscan_vs_hmmsearch]: http://cryptogenomicon.org/hmmscan-vs-hmmsearch-speed-the-numerology.html
-[pyhmmer]: https://pyhmmer.readthedocs.io/en/stable/index.html
-[dbcansub]: http://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv
-[dbcan2_paper]: https://doi.org/10.1093/nar/gky418
-[Biopython]: https://biopython.org/
 [Bioconda]: https://anaconda.org/bioconda/dbcanlight
+[Biopython]: https://biopython.org/
+[dbcan2_paper]: https://doi.org/10.1093/nar/gky418
+[dbcansub]: http://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv
+[hmmscan_vs_hmmsearch]: http://cryptogenomicon.org/hmmscan-vs-hmmsearch-speed-the-numerology.html
+[pre-commit]: https://pre-commit.com/
+[pyhmmer]: https://pyhmmer.readthedocs.io/en/stable/index.html
 [pytest]: https://docs.pytest.org/en/stable/
 [pytest-cov]: https://pytest-cov.readthedocs.io/en/stable/
+[python]: https://www.python.org/
+[run_dbcan]: https://github.com/linnabrown/run_dbcan

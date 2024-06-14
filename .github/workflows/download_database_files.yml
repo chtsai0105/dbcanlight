@@ -1,14 +1,14 @@
-name: Download external files
+name: Download database files
 
 on: workflow_call
 
 jobs:
   build_diamond:
-    name: Download external files
+    name: Download database files
     runs-on: ubuntu-latest
 
     steps:
-      - name: Cache external data
+      - name: Cache database files
         id: cache
         uses: actions/cache@v4
         with:
@@ -17,10 +17,10 @@ jobs:
             ~/.dbcanlight/substrate_mapping.tsv
             ~/.dbcanlight/substrate.hmm
             ~/.dbcanlight/cazydb.dmnd
-          key: dbcanlight-external
+          key: dbcanlight-databases
 
       - name: Cache diamond
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.local/bin/diamond

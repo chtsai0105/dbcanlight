@@ -2,10 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic
+Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+
+- Diamond as the third tool for prediction.
+
+- Conclude module to report an overview of the predictions made by each tool.
+
+### Changed
+
+- Using menu to display all the available modules.
+
+### Removed
+
+- Output to stdout and input from stdin in not available anymore.
 
 ## [1.0.2] - 2023-10-13
 
@@ -29,9 +43,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Implement cazyme and substrate detection with multi-threads supported hmmsearch from pyhmmer.
 
-- Companion commands dbcanLight-hmmparser ([hmmsearch_parser.py](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/hmmsearch_parser.py)) helps to convert conventional hmmer3 output to dbcan format and dbcanLight-subparser ([substrate_parser.py](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/substrate_parser.py)) helps to map to the potential substrate (require to search against the [substrate hmm porfile](https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm)).
+- Companion commands dbcanLight-hmmparser
+  ([hmmsearch_parser.py](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/hmmsearch_parser.py)) helps to
+  convert conventional hmmer3 output to dbcan format and dbcanLight-subparser
+  ([substrate_parser.py](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/substrate_parser.py)) helps to map to
+  the potential substrate (require to search against the [substrate hmm
+  profile](https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm)).
 
-- Rewrite the hmmsearch filtering codes initally written in Perl by Yanbin Yin@NIU to a Python function [overlap_filter](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/hmmsearch_parser.py#L78-L110) under hmmsearch_parser.py.
+- Rewrite the hmmsearch filtering codes initially written in Perl by Yanbin Yin@NIU to a Python function
+  [overlap_filter](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/hmmsearch_parser.py#L78-L110) under
+  hmmsearch_parser.py.
 
 - Process and filter hmmsearch hits on-the-fly to prevent the out-of-memory issue for large input files.
 
