@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import argparse
-import logging
 import re
 import sys
 import textwrap
 from functools import wraps
 from pathlib import Path
 from typing import Callable, Iterator, Sequence
+from urllib.error import HTTPError, URLError
+from urllib.request import urlopen
+
+from . import _config, logger
 
 
 class CustomHelpFormatter(argparse.HelpFormatter):
@@ -49,14 +52,12 @@ def check_db(*dbs: Path) -> None:
             """The wrapper function that checks the databases existence."""
             dbmissingList = []
             for db in dbs:
-                dbmissingList.append(db) if not db.exists() else logging.debug(f"Found database: {db.absolute()}")
+                dbmissingList.append(str(db)) if not db.exists() else logger.debug(f"Found database: {db.absolute()}")
             if dbmissingList:
-                print(
-                    f"Database file {*dbmissingList,} missing. "
-                    "Please follow the instructions in https://github.com/chtsai0105/dbcanLight#requirements "
-                    "and download the required databases."
+                raise FileNotFoundError(
+                    f'Database file missing {", ".join(dbmissingList)}. '
+                    "Please use the build module to download the required databases."
                 )
-                sys.exit(1)
             return func(*args, **kwargs)
 
         return wrapper
@@ -74,9 +75,6 @@ def args_parser(
 ):
     """Preset menu structure for entry-point scripts."""
     try:
-        logging.basicConfig(format="%(asctime)s %(name)s %(levelname)s %(message)s", level="INFO")
-        logger = logging.getLogger(prog)
-
         parser = argparse.ArgumentParser(
             prog=prog,
             formatter_class=CustomHelpFormatter,
@@ -85,37 +83,65 @@ def args_parser(
         )
         parser = parser_func(parser)
 
-        args = args if args else sys.argv[1:]
-        if not args or "help" in args:
+        args = args or sys.argv[1:]
+        if not args:
             parser.print_help(sys.stderr)
             raise SystemExit(0)
         args = parser.parse_args(args)
+
+        if hasattr(args, "threads"):
+            if args.threads > _config.avail_cpus:
+                args.threads = _config.avail_cpus
 
         if args.verbose:
             logger.setLevel("DEBUG")
             for handler in logger.handlers:
                 handler.setLevel("DEBUG")
-            logging.debug("Debug mode enabled.")
+            logger.debug("Debug mode enabled.")
+            logger.debug(vars(args))
 
         args.func(**vars(args))
 
     except KeyboardInterrupt:
-        logging.warning("Terminated by user.")
+        logger.warning("Terminated by user.")
+        return 1
+
+    except Exception as err:
+        logger.error(err)
         return 1
 
     except SystemExit as err:
         if err.code != 0:
-            logging.error(err)
+            logger.error(err)
             return 1
 
     return 0
+
+
+def download(url: str, dest_dir: Path = _config.cfg_dir, filename: str | None = None) -> None:
+    """Download from URL and save to file."""
+    if filename is None:
+        filename = url.split("/")[-1]
+        full_path = dest_dir / filename
+    else:
+        full_path = dest_dir / filename
+    try:
+        logger.info(f"Downloading from {url} ...")
+        with urlopen(url) as response:
+            data = response.read()
+            with open(full_path, "wb") as f:
+                f.write(data)
+    except HTTPError as e:
+        raise HTTPError("URL currently unavailble.") from e
+    except URLError as e:
+        raise URLError("URL not found or no internet connection available.") from e
 
 
 def writer(results: Iterator[list[str]], output: Path, *, header: Sequence) -> None:
     """Writer function that write the results to the output file."""
     output.parent.mkdir(parents=True, exist_ok=True)
 
-    logging.info(f"Write output to {output}")
+    logger.info(f"Write output to {output}")
     with open(output, "w") as f:
         print("\t".join(header), file=f)
 

@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-import logging
-import subprocess
 from pathlib import Path
 from typing import Generator
 
 import pyhmmer
 
-import dbcanlight._config as _config
-from dbcanlight._utils import check_db
-from dbcanlight.hmmsearch_parser import overlap_filter
-from dbcanlight.substrate_parser import substrate_mapping
+from . import _config, logger
+from ._utils import check_db
+from .hmmsearch_parser import overlap_filter
+from .substrate_parser import substrate_mapping
 
 
 @check_db(_config.db_path.cazyme_hmms)
@@ -31,43 +29,6 @@ def subs_search(
     return substrate_mapping(
         _hmmsearch_pipeline(Path(input), Path(hmms), evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize)
     )
-
-
-@check_db(_config.db_path.diamond)
-def diamond(
-    input: str | Path, *, evalue: float = 1e-102, coverage: float = 0.35, threads: int = 1
-) -> Generator[list, None, None]:
-    """Function for cazyme diamond blastp. Returns a generator of list of results."""
-    cmd = [
-        "diamond",
-        "blastp",
-        "--db",
-        str(_config.db_path.diamond),
-        "--query",
-        str(input),
-        "--evalue",
-        str(evalue),
-        "--threads",
-        str(threads),
-        "--query-cover",
-        str(coverage),
-        "--max-target-seqs",
-        "1",
-        "--outfmt",
-        "6",
-    ]
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
-        while True:
-            stdout_line = p.stdout.readline()
-            stderr_line = p.stderr.readline()
-            if stdout_line == b"" and stderr_line == b"" and p.poll() is not None:
-                break
-
-            if stdout_line:
-                yield stdout_line.decode().strip().split("\t")
-
-            if stderr_line:
-                raise RuntimeError(stderr_line.decode())
 
 
 def _hmmsearch_pipeline(
@@ -92,11 +53,18 @@ def _load_hmms(hmm_file: Path) -> pyhmmer.plan7.HMMPressedFile | pyhmmer.plan7.H
     if f.is_pressed():
         hmms = f.optimized_profiles()
         hmms.rewind()
-        logging.debug("Use hmm pressed file.")
+        logger.debug(f"Load {hmm_file} with pressed mode.")
         return hmms
     else:
-        logging.debug("Use regular hmm file.")
+        logger.debug(f"Load {hmm_file} with regular mode.")
         return f
+
+
+def _press_hmms(hmm_file: Path) -> None:
+    """Press hmm into a database."""
+    hmms = _load_hmms(hmm_file)
+    logger.debug(f"Pressing {hmm_file}...")
+    pyhmmer.hmmpress(hmms, hmm_file)
 
 
 def _load_seqs_and_hmmsearch(
@@ -116,7 +84,7 @@ def _load_seqs_and_hmmsearch(
             if not seq_block:
                 break
             if blocksize:
-                logging.debug(f"Hmmsearch on sequence {block_start}-{block_start + blocksize}...")
+                logger.debug(f"Hmmsearch on sequence {block_start}-{block_start + blocksize}...")
             yield _run_hmmsearch(seq_block, hmms, evalue=evalue, coverage=coverage, threads=threads)
             if blocksize:
                 block_start += blocksize
@@ -156,5 +124,5 @@ def _run_hmmsearch(
                         cov,
                     ]
                 )
-    logging.info(f"Found {len(results)} genes have hits.")
+    logger.info(f"Found {len(results)} genes have hits.")
     return results

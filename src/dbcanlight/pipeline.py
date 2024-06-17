@@ -3,23 +3,49 @@
 from __future__ import annotations
 
 import csv
-import logging
 import re
+import tempfile
+from multiprocessing.dummy import Pool as ThreadPool
 from pathlib import Path
 from typing import Generator
 
-import dbcanlight._config as _config
-from dbcanlight._utils import writer
-from dbcanlight.libsearch import cazyme_search, diamond, subs_search
+from . import _config, logger
+from ._utils import download, writer
+from .libdiamond import diamond_build, diamond_search
+from .libhmm import _press_hmms, cazyme_search, subs_search
 
 
-def build(**kwargs):
+def build(threads: int = 1, **kwargs) -> None:
     """
     Download and build the required databases.
 
-    (not completed)
+    Clear the database files that already exist in the config folder. (~/.dbcanlight) Download from the dbcan website and use
+    hmmpress to build the databases for hmm profile. Use the threads option to download parallelly.
     """
-    pass
+    if threads > 4:
+        logger.warning("Specified more than 4 CPUs. Will only use 4 at most.")
+        threads = 4
+
+    if any(_config.cfg_dir.iterdir()):
+        logger.debug("Remove old database files.")
+        for file in _config.cfg_dir.iterdir():
+            file.unlink()
+
+    tempdir = tempfile.TemporaryDirectory()
+    dest_dirs = (_config.cfg_dir,) * 3 + (Path(tempdir.name),)
+    try:
+        with ThreadPool(threads) as pool:
+            pool.starmap(
+                download, [(url, dest_dir, file) for (url, file), dest_dir in zip(_config.databases_url.values(), dest_dirs)]
+            )
+        cazydb_fa = Path(tempdir.name) / _config.databases_url["diamond"][1]
+        diamond_build(cazydb_fa, _config.db_path.diamond, threads=threads)
+    finally:
+        tempdir.cleanup()
+
+    logger.info("Running hmmpress...")
+    for hmm_file in _config.cfg_dir.glob("*.hmm"):
+        _press_hmms(hmm_file)
 
 
 def search(
@@ -54,9 +80,9 @@ def search(
         )
     elif mode == "diamond":
         if blocksize is not None:
-            logging.warning('Parameter "blocksize" is not applicable on diamond.')
+            logger.warning('Parameter "blocksize" is not applicable on diamond.')
         evalue = 1e-102 if evalue == "AUTO" else evalue
-        results = diamond(input, evalue=evalue, coverage=coverage, threads=threads)
+        results = diamond_search(input, evalue=evalue, coverage=coverage, threads=threads)
     else:
         raise KeyError(f"{mode} is not an available mode.")
     header = getattr(_config.headers, mode)
@@ -65,7 +91,7 @@ def search(
     return writer(results, output, header=header)
 
 
-def conclude(output: str | Path, **kwargs):
+def conclude(output: str | Path, **kwargs) -> None:
     """
     Conclude the results made by each module.
 
@@ -101,7 +127,7 @@ def conclude(output: str | Path, **kwargs):
     for mode, file_name in _config.avail_modes.items():
         file_path = Path(output) / file_name
         if file_path.is_file():
-            logging.info(f"Processing {file_path}...")
+            logger.info(f"Processing {file_path}...")
             with open(file_path) as f:
                 reader = csv.reader(f, delimiter="\t")
                 next(reader, None)
@@ -120,9 +146,9 @@ def conclude(output: str | Path, **kwargs):
                         [results[gene]["substrate"].add(sub) for sub in subs]
             avail_results += 1
         else:
-            logging.warning(f"Results from {mode} mode not exists.")
+            logger.warning(f"Results from {mode} mode not exists.")
     if avail_results < 2:
-        raise SystemExit(f"Required at least 2 results to conclude but got {avail_results}. Aborted.")
+        raise RuntimeError(f"Required at least 2 results to conclude but got {avail_results}. Aborted.")
     results = summarize(results)
 
     return writer(results, Path(output) / "overview.tsv", header=_config.headers.overview)

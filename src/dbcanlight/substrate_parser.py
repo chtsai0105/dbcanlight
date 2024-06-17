@@ -9,10 +9,9 @@ import re
 from pathlib import Path
 from typing import Generator, Iterator, Sequence
 
-import dbcanlight._config as _config
-from dbcanlight import __entry_points__, __version__
-from dbcanlight._utils import args_parser, check_db, writer
-from dbcanlight.hmmsearch_parser import HmmsearchParser
+from . import __entry_points__, __version__, _config
+from ._utils import args_parser, check_db, writer
+from .hmmsearch_parser import HmmsearchParser
 
 
 @check_db(_config.db_path.subs_mapper)

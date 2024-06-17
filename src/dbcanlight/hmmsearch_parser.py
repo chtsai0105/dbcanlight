@@ -5,16 +5,14 @@ from __future__ import annotations
 
 import argparse
 import csv
-import logging
 from operator import itemgetter
 from pathlib import Path
 from typing import Generator, Iterator, Sequence
 
 from Bio import SearchIO
 
-import dbcanlight._config as _config
-from dbcanlight import __entry_points__, __version__
-from dbcanlight._utils import args_parser, writer
+from . import __entry_points__, __version__, _config, logger
+from ._utils import args_parser, writer
 
 
 class HmmsearchParser:
@@ -25,7 +23,7 @@ class HmmsearchParser:
         input = Path(input)
         try:
             self._data = self._hmmer_reader(input)
-            logging.info("Input is hmmer3 format")
+            logger.info("Input is hmmer3 format")
         except AssertionError:
             self._data = self._dbcan_reader(input)
 
@@ -62,7 +60,7 @@ class HmmsearchParser:
     def _dbcan_reader(self, input: Path) -> list[list]:
         """Reader for files in dbcan format."""
         with open(input) as f:
-            logging.info("Input is dbcan format")
+            logger.info("Input is dbcan format")
             first_3_lines = f.readline() + f.readline() + f.readline()
             try:
                 dialect = csv.Sniffer().has_header(first_3_lines)
@@ -99,7 +97,7 @@ class HmmsearchParser:
             if line[4] > evalue or line[9] < coverage:
                 continue
             results.setdefault(line[2], []).append(line)
-        logging.info(f"Found {len(results)} genes have hits")
+        logger.info(f"Found {len(results)} genes have hits")
         yield results
 
 
@@ -133,7 +131,7 @@ def overlap_filter(results: Sequence[dict[str, list[list]]] | Iterator[dict[str,
                     else:
                         # If not overlapped than move the pointer
                         idx += 1
-                logging.debug(f"{gene}: {len(hits)} hit(s) passed the filter")
+                logger.debug(f"{gene}: {len(hits)} hit(s) passed the filter")
             else:
                 continue
             for hit in hits:
@@ -156,10 +154,10 @@ def main(args: list[str] | None = None) -> int:
     return args_parser(_menu, args, prog=__entry_points__[__name__], description=main.__doc__)
 
 
-def _run(input: str | Path, output: str | Path, **kwargs) -> None:
+def _run(input: str | Path, output: str | Path, evalue: float = 1e-15, coverage: float = 0.35, **kwargs) -> None:
     """Process the data."""
     data_parser = HmmsearchParser(input)
-    results = data_parser.eval_cov_filter(**kwargs)
+    results = data_parser.eval_cov_filter(evalue=evalue, coverage=coverage)
     results = overlap_filter(results)
     writer(results, Path(output), header=_config.headers.cazyme)
 

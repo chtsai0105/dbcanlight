@@ -5,10 +5,9 @@ from __future__ import annotations
 
 import argparse
 
-import dbcanlight._config as _config
-from dbcanlight import __author__, __entry_points__, __version__
-from dbcanlight._utils import CustomHelpFormatter, args_parser
-from dbcanlight.pipeline import build, conclude, search
+from . import __author__, __entry_points__, __version__, _config
+from ._utils import CustomHelpFormatter, args_parser
+from .pipeline import build, conclude, search
 
 
 def _menu_build(
@@ -21,6 +20,15 @@ def _menu_build(
         formatter_class=CustomHelpFormatter,
         help="Download and build the required databases",
         description=build.__doc__,
+    )
+    # p_build.add_argument("output", type=str, help="update")
+    p_build.add_argument(
+        "-t",
+        "--threads",
+        metavar="int",
+        type=int,
+        default=_config.avail_cpus if _config.avail_cpus <= 4 else 4,
+        help="Number of cpu to use. Will use at most 4 CPUs even if more are specified",
     )
     p_build.set_defaults(func=build)
 
@@ -49,7 +57,7 @@ def _menu_search(
         help="Evalue cutoff. Use 1e-15 for hmmsearch and 1e-102 for diamond when specifying AUTO (default: AUTO)",
     )
     p_search.add_argument("-c", "--coverage", metavar="float", type=float, default=0.35, help="Coverage cutoff")
-    p_search.add_argument("-t", "--threads", metavar="int", type=int, default=1, help="Number of cpu to use")
+    p_search.add_argument("-t", "--threads", metavar="int", type=int, default=_config.avail_cpus, help="Number of CPU to use")
     p_search.add_argument(
         "-b",
         "--blocksize",
@@ -74,6 +82,7 @@ def _menu_conclude(
     )
     p_conclude.add_argument("output", type=str, help="Folder that contains dbcanlight search results")
     p_conclude.set_defaults(func=conclude)
+    parent_parser.add_help
 
 
 def _menu(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
@@ -101,9 +110,7 @@ def main(args: list[str] | None = None) -> int:
     dbcan website. The search module searches against protein HMM, substrate HMM or diamond databases and reports the hits
     separately. The conclude module gathers all the results made by each module and reports a brief overview.
     """
-    return args_parser(
-        _menu, args, prog=__entry_points__[__name__], description=main.__doc__, epilog=f'Written by {__author__}'
-    )
+    return args_parser(_menu, args, prog=__entry_points__[__name__], description=main.__doc__, epilog=f"Written by {__author__}")
 
 
 if __name__ == "__main__":

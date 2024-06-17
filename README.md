@@ -5,7 +5,6 @@
 [![Changelog](https://img.shields.io/badge/Changelog-darkred)](https://github.com/chtsai0105/dbcanlight/blob/main/CHANGELOG.md)
 [![License](https://img.shields.io/github/license/chtsai0105/dbcanlight?label=license)](https://github.com/chtsai0105/dbcanlight/blob/main/LICENSE)
 
-
 # dbcanlight
 
 A lightweight rewrite of [run_dbcan] for better multithread performance. The previous version of run_dbcan uses hmmscan, which is
@@ -36,9 +35,6 @@ CGCFinder, etc. are not included. If you tend to use these features, please use 
 
 ## Usage
 
-Before the first execution, please make sure the [required data](#required_data) have already been downloaded before use. (will be
-done by the `download` module in the future update)
-
 To test run on the example files, please cd into the folder **example**.
 
 ```
@@ -47,6 +43,21 @@ cd example
 
 A protein fasta file **example.faa** can be found under the folder. In additional, there is a domtblout output
 **hmmsearch_output**, which is generated from **example.faa** using cli hmmsearch against dbcan substrate database.
+
+### Build
+
+Build module is used to download the latest databases from dbcan website and further processes them to certain format that can be
+accessed by the search module. In general, there are [4 database files](#required_data) need to be downloaded first. The raw
+database files need further processing - the hmm databases require hmmpress for faster accessibility and diamond database need to
+be built from the fasta file. All the processing are done by build module:
+
+```
+dbcanlight build
+```
+
+To ensure the latest databases are obtained, the build module will delete the old database files from the dbcanlight config folder
+($HOME/.dbcanlight) and re-download from the dbcan website every time it runs. Also note that you can use at most 4 cpus to
+support parallel downloading.
 
 ### Search
 
@@ -150,14 +161,14 @@ cd [decompressed source dir]
 pip install .
 ```
 
-<a name="required_data"></a>Please also download the required hmm profile databases and the substrate mapping table with the
-following cmds:
+<a name="required_data"></a>Four database files need to be downloaded prior the analysis. You can do it with [the build
+module](#build) or manually by the following commands:
 
 ```
-mkdir -p $HOME/.dbcanlight && \
-curl -o $HOME/.dbcanlight/substrate_mapping.tsv https://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv && \
+mkdir $HOME/.dbcanlight
 curl -o $HOME/.dbcanlight/cazyme.hmm https://bcb.unl.edu/dbCAN2/download/Databases/V12/dbCAN-HMMdb-V12.txt && \
 curl -o $HOME/.dbcanlight/substrate.hmm https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm
+curl -o $HOME/.dbcanlight/substrate_mapping.tsv https://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv && \
 curl -o $HOME/.dbcanlight/cazydb.fa https://bcb.unl.edu/dbCAN2/download/Databases/CAZyDB.07262023.fa
 ```
 
@@ -184,7 +195,8 @@ Developer can install it with conda by:
 conda install pre-commit>=3.4.0 pytest>=8.0.0 pytest-cov>=5.0.0
 ```
 
-For convenience we also provide the additional conda env file. Please use the `dev_additional_packages.yml` to install the additional packages.
+For convenience we also provide the additional conda env file. Please use the `dev_additional_packages.yml` to install the
+additional packages.
 
 ```
 conda env update -f dev_additional_packages.yml

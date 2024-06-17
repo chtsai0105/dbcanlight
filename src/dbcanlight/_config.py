@@ -8,6 +8,7 @@ from pathlib import Path
 @dataclass
 class DBPath:
     """Dataclass for database paths."""
+
     cazyme_hmms: Path
     subs_hmms: Path
     subs_mapper: Path
@@ -17,6 +18,7 @@ class DBPath:
 @dataclass
 class Headers:
     """Dataclass for headers."""
+
     cazyme: tuple
     sub: tuple
     diamond: tuple
@@ -34,6 +36,13 @@ db_path = DBPath(
     subs_mapper=cfg_dir / "substrate_mapping.tsv",
     diamond=cfg_dir / "cazydb.dmnd",
 )
+
+databases_url = {
+    "cazyme_hmms": ("https://bcb.unl.edu/dbCAN2/download/Databases/V12/dbCAN-HMMdb-V12.txt", db_path.cazyme_hmms.name),
+    "subs_hmms": ("https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm", db_path.subs_hmms.name),
+    "subs_mapper": ("https://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv", db_path.subs_mapper.name),
+    "diamond": ("https://bcb.unl.edu/dbCAN2/download/Databases/CAZyDB.07262023.fa", "cazydb.fa"),
+}
 
 avail_modes = {"cazyme": "cazymes.tsv", "sub": "substrates.tsv", "diamond": "diamond.tsv"}
 
