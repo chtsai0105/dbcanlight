@@ -1,8 +1,8 @@
-[![Build](https://img.shields.io/github/actions/workflow/status/chtsai0105/dbcanlight/python-versions.yml?branch=main&logo=github)](https://github.com/chtsai0105/dbcanlight/actions/workflows/build_and_test.yml)
+[![Build](https://img.shields.io/github/actions/workflow/status/chtsai0105/dbcanlight/build_and_test.yml?branch=main&logo=github)](https://github.com/chtsai0105/dbcanlight/actions/workflows/build_and_test.yml)
 [![Bioconda](https://img.shields.io/conda/v/bioconda/dbcanlight?logo=anaconda&color=orange)][Bioconda]
 [![Python](https://img.shields.io/badge/python-3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11_%7C_3.12-blue?logo=python)](https://github.com/chtsai0105/dbcanlight/actions/workflows/build_and_test.yml)
 [![codecov](https://codecov.io/gh/chtsai0105/dbcanlight/graph/badge.svg?token=XEBUU3BRRF)](https://codecov.io/gh/chtsai0105/dbcanlight)
-[![Changelog](https://img.shields.io/badge/Changelog-darkred)](https://github.com/chtsai0105/dbcanlight/blob/main/CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog%20v1.1.0-%23E05735)](https://github.com/chtsai0105/dbcanlight/blob/main/CHANGELOG.md)
 [![License](https://img.shields.io/github/license/chtsai0105/dbcanlight?label=license)](https://github.com/chtsai0105/dbcanlight/blob/main/LICENSE)
 
 # dbcanlight
