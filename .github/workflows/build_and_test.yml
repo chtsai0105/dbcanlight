@@ -78,7 +78,9 @@ jobs:
           key: ${{ runner.os }}-diamond
 
       - name: Test with pytest
-        run: pytest -vv --cov=src --cov-report=xml --runslow
+        run: |
+          package_name=$(grep '^name = ' pyproject.toml | sed 's/name = "\(.*\)"/\1/' | tr -d '[:space:]')
+          pytest -vv --cov=$package_name --cov-report=xml --runslow
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.4.1
