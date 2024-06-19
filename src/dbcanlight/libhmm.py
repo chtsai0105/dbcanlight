@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 from pathlib import Path
 from typing import Generator
 
@@ -47,17 +48,16 @@ def _hmmsearch_pipeline(
     return results
 
 
-def _load_hmms(hmm_file: Path) -> pyhmmer.plan7.HMMPressedFile | pyhmmer.plan7.HMMFile:
+def _load_hmms(hmm_file: Path) -> list[pyhmmer.plan7.OptimizedProfile | pyhmmer.plan7.HMM]:
     """Load hmm profiles."""
     f = pyhmmer.plan7.HMMFile(hmm_file)
     if f.is_pressed():
-        hmms = f.optimized_profiles()
-        hmms.rewind()
+        f = f.optimized_profiles()
+        f.rewind()
         logger.debug(f"Load {hmm_file} with pressed mode.")
-        return hmms
     else:
         logger.debug(f"Load {hmm_file} with regular mode.")
-        return f
+    return list(f)
 
 
 def _press_hmms(hmm_file: Path) -> None:
@@ -69,7 +69,7 @@ def _press_hmms(hmm_file: Path) -> None:
 
 def _load_seqs_and_hmmsearch(
     input: Path,
-    hmms: pyhmmer.plan7.HMMPressedFile | pyhmmer.plan7.HMMFile,
+    hmms: list[pyhmmer.plan7.OptimizedProfile | pyhmmer.plan7.HMM],
     *,
     evalue: float = 1e-15,
     coverage: float = 0.35,
@@ -78,21 +78,18 @@ def _load_seqs_and_hmmsearch(
 ) -> Generator[dict[str, list[list]], None, None]:
     """Load query sequences and run hmmsearch by batch."""
     with pyhmmer.easel.SequenceFile(input, digital=True) as seq_file:
-        block_start = 0
-        while True:
+        for batch in itertools.count():
             seq_block = seq_file.read_block(sequences=blocksize)
             if not seq_block:
                 break
             if blocksize:
-                logger.debug(f"Hmmsearch on sequence {block_start}-{block_start + blocksize}...")
+                logger.debug(f"Hmmsearch on sequence {batch * blocksize + 1}-{batch * blocksize + len(seq_block)}...")
             yield _run_hmmsearch(seq_block, hmms, evalue=evalue, coverage=coverage, threads=threads)
-            if blocksize:
-                block_start += blocksize
 
 
 def _run_hmmsearch(
     sequences: pyhmmer.easel.SequenceBlock,
-    hmms: pyhmmer.plan7.HMMPressedFile | pyhmmer.plan7.HMMFile,
+    hmms: list[pyhmmer.plan7.OptimizedProfile | pyhmmer.plan7.HMM],
     *,
     evalue: float = 1e-15,
     coverage: float = 0.35,
