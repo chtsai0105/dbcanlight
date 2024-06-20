@@ -143,8 +143,8 @@ def writer(results: Iterator[list[str]], output: Path, *, header: Sequence) -> N
 
     logger.info(f"Write output to {output}")
     with open(output, "w") as f:
-        print("\t".join(header), file=f)
+        f.write("\t".join(header) + "\n")
 
         for line in results:
             line[0] = line[0].rstrip(".hmm")
-            print("\t".join([str(x) for x in line]), file=f)
+            f.write("\t".join([str(x) for x in line]) + "\n")
