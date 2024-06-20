@@ -133,7 +133,7 @@ def overlap_filter(results: Sequence[dict[str, list[list]]] | Iterator[dict[str,
                         idx += 1
                 logger.debug(f"{gene}: {len(hits)} hit(s) passed the filter")
             else:
-                continue
+                pass
             for hit in hits:
                 hit[4], hit[9] = f"{hit[4]:0.1e}", f"{hit[9]:0.3}"
                 yield hit

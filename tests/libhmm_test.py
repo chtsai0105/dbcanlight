@@ -10,7 +10,7 @@ input = Path("tests/data/example.faa")
 
 def test_cazyme_search():
     r = list(cazyme_search(input, _config.db_path.cazyme_hmms))
-    assert len(r) == 3
+    assert len(r) == 4
     assert len(r[0]) == len(_config.headers.cazyme)
 
 
