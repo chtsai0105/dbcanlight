@@ -16,7 +16,13 @@ from .substrate_parser import substrate_mapping
 
 @check_db(_config.db_path.cazyme_hmms)
 def cazyme_search(
-    input: str | Path, hmms: str | Path, *, evalue: float = 1e-15, coverage: float = 0.35, threads: int = 1, blocksize: int = None
+    input: str | Path,
+    hmms: str | Path,
+    *,
+    evalue: float = 1e-15,
+    coverage: float = 0.35,
+    threads: int = 1,
+    blocksize: int = 100000,
 ) -> Generator[list, None, None]:
     """Function for cazyme hmmsearch. Returns a generator of list of results."""
     return _hmmsearch_pipeline(Path(input), Path(hmms), evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize)
@@ -24,7 +30,13 @@ def cazyme_search(
 
 @check_db(_config.db_path.subs_hmms, _config.db_path.subs_mapper)
 def subs_search(
-    input: str | Path, hmms: str | Path, *, evalue: float = 1e-15, coverage: float = 0.35, threads: int = 1, blocksize: int = None
+    input: str | Path,
+    hmms: str | Path,
+    *,
+    evalue: float = 1e-15,
+    coverage: float = 0.35,
+    threads: int = 1,
+    blocksize: int = 100000,
 ) -> Generator[list, None, None]:
     """Function for substrate hmmsearch. Returns a generator of list of results."""
     return substrate_mapping(
@@ -39,7 +51,7 @@ def _hmmsearch_pipeline(
     evalue: float = 1e-15,
     coverage: float = 0.35,
     threads: int = 1,
-    blocksize: int | None = None,
+    blocksize: int = 100000,
 ) -> Generator[list, None, None]:
     """Hmmsearch pipeline."""
     hmms = _load_hmms(hmms)
@@ -74,9 +86,10 @@ def _load_seqs_and_hmmsearch(
     evalue: float = 1e-15,
     coverage: float = 0.35,
     threads: int = 1,
-    blocksize: int | None = None,
+    blocksize: int = 100000,
 ) -> Generator[dict[str, list[list]], None, None]:
     """Load query sequences and run hmmsearch by batch."""
+    blocksize == blocksize or None
     with pyhmmer.easel.SequenceFile(input, digital=True) as seq_file:
         for batch in itertools.count():
             seq_block = seq_file.read_block(sequences=blocksize)

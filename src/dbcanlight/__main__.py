@@ -64,7 +64,8 @@ def _menu_search(
         metavar="int",
         type=int,
         default=100000,
-        help="Number of sequence to search per batch. Lower the blocksize to use fewer memory (not applicable on diamond)",
+        help="Number of sequence to search per batch. Lower the blocksize to use fewer memory. "
+        "Set as 0 to disable batching (default: 100000, not applicable on diamond)",
     )
     p_search.set_defaults(func=search)
 

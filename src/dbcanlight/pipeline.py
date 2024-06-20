@@ -56,7 +56,7 @@ def search(
     evalue: str | float = "AUTO",
     coverage: float = 0.35,
     threads: int = 1,
-    blocksize: int = None,
+    blocksize: int = 100000,
     **kwargs,
 ) -> None:
     """
@@ -65,9 +65,8 @@ def search(
     Use "cazyme" mode to report the CAZyme families predicted by HMM; "sub" mode to report the potential substrates; and "diamond"
     mode to report the CAZyme families predicted by DIAMOND. (--tools hmmer/dbcansub/diamond in the original run_dbcan)
     """
-    if mode != "diamond" and blocksize is not None:
-        if blocksize < 1:
-            raise ValueError(f"blocksize={blocksize} which is smaller than 1.")
+    if mode != "diamond" and blocksize < 1:
+        raise ValueError(f"blocksize={blocksize} which is smaller than 1.")
     if mode == "cazyme":
         evalue = 1e-15 if evalue == "AUTO" else evalue
         results = cazyme_search(
@@ -79,7 +78,7 @@ def search(
             input, _config.db_path.subs_hmms, evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize
         )
     elif mode == "diamond":
-        if blocksize is not None:
+        if abs(blocksize) > 0:
             logger.warning('Parameter "blocksize" is not applicable on diamond.')
         evalue = 1e-102 if evalue == "AUTO" else evalue
         results = diamond_search(input, evalue=evalue, coverage=coverage, threads=threads)
