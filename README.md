@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/chtsai0105/dbcanlight/graph/badge.svg?token=XEBUU3BRRF)](https://codecov.io/gh/chtsai0105/dbcanlight)
 [![Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog%20v1.1.0-%23E05735)](https://github.com/chtsai0105/dbcanlight/blob/main/CHANGELOG.md)
 [![License](https://img.shields.io/github/license/chtsai0105/dbcanlight?label=license)](https://github.com/chtsai0105/dbcanlight/blob/main/LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13586882.svg)](https://doi.org/10.5281/zenodo.13586882)
 
 # dbcanlight
 
