@@ -15,7 +15,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- Using menu to display all the available modules.
+- Use a menu to display all the available modules.
 
 ### Removed
 
