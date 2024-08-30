@@ -7,31 +7,30 @@
 
 # dbcanlight
 
-A lightweight rewrite of [run_dbcan] for better multithread performance. The previous version of run_dbcan uses hmmscan, which is
-reported to be way slow compared to hmmsearch although they're doing the same compute. It is highly recommended to [use hmmsearch
-for searching a large sequence database against a profile database][hmmscan_vs_hmmsearch] and in the latest update [run_dbcan]
-finally switch to use hmmsearch.
+A lightweight rewrite of [run_dbcan] for better multithreading performance. The previous version of run_dbcan uses hmmscan, which
+is reported to be way slow compared to hmmsearch although they're doing the same compute. It is highly recommended to [use
+hmmsearch for searching a large sequence database against a profile database][hmmscan_vs_hmmsearch] and in the latest update
+[run_dbcan] finally switch to use hmmsearch. To further improve the performance and the code readability, [pyhmmer], a Cython
+bindings to HMMER3, was used to instead the cli version of HMMER3 for hmmsearch processes.
 
-To further improve the performance and the code readability, [pyhmmer], a Cython bindings to HMMER3, was used instead of the cli
-HMMER3 suite to run hmmsearch. My implementation also address another issue possessed in the original [run_dbcan] -
-under-performance and cpu over-spawning issue when the input contains over million of sequences. dbcanlight can run faster and
-with much lower memory consumption than the original implementation.
+My implementation also address another issue in the original [run_dbcan] that the input contains over million of sequences need to
+be split beforehand. In dbcanlight, inputs are able to be processed in batch so no need for manual file splitting.
 
 The main program `dbcanlight` comprises 3 modules - `build`, `search` and `conclude`. The build module help to download the
-required databases from dbcan website. (Not implemented yet!) The search module searches against protein HMM, substrate HMM or
-diamond databases and reports the hits separately. The conclude module gathers all the results made by each module and reports a
-brief overview.
+required databases from dbcan website; the search module searches against protein HMM, substrate HMM or diamond databases and
+reports the hits separately; and the conclude module gathers all the results made by each module and provides a brief overview.
 
 In addition to the main program, another 2 programs are also included to help parse the hmmsearch outputs if users have done their
 own searches by cli HMMER3 suite. The `dbcanlight-hmmparse` is a rewrite of `hmmscan_parser.py` in `run_dbcan` which can be used
 to filter the overlapped hits and convert a domtblout format file output from hmmer3 suite into a dbcan-10-column format. The
-`dbcanlight-subparser` takes the dbcan-formatted substrate output and map against the [substrate conversion table][dbcansub]. Here
-I slightly re-organize the output - the original [run_dbcan] output the same substrate several times for a gene that hits multiple
-profiles with the same substrate; in dbcanlight we only report it once.
+`dbcanlight-subparser` takes the dbcan-formatted substrate output and map against the [substrate conversion table][dbcansub].
 
-The output of dbcanlight is fully compatible with the original [run_dbcan]. However, dbcanlight only re-implemented the core
-features of [run_dbcan], that is searching for CAZyme and substrate matches by hmmer/diamond/dbcansub. Submodules like signalP,
-CGCFinder, etc. are not included. If you tend to use these features, please use the original version of [run_dbcan].
+The output of dbcanlight is resemble to the original [run_dbcan] with slight cleanup. The original [run_dbcan] output the same
+substrate several times for a gene that hits multiple profiles with the same substrate; in dbcanlight we only report it once.
+
+Dbcanlight only re-implemented the core features of [run_dbcan], that is searching for CAZyme and substrate matches by
+hmmer/diamond/dbcansub. Submodules like signalP, CGCFinder, etc. are not implemented. If you tend to use these features, please
+use the original version of [run_dbcan].
 
 ## Usage
 
@@ -161,7 +160,7 @@ cd [decompressed source dir]
 pip install .
 ```
 
-<a name="required_data"></a>Four database files need to be downloaded prior the analysis. You can do it with [the build
+<a name="required_data"></a>Four database files need to be downloaded prior the analysis. You can download them with [the build
 module](#build) or manually by the following commands:
 
 ```
@@ -211,23 +210,27 @@ pre-commit install
 
 ## Benchmark
 
-The performance test was done on a protein fasta predicted by Prodigal with 9,360 sequences (3.0 MB in size). 3 rounds of test
-were run on cazyme detection mode (`--tools hmmer` in run_dbcan and `-m cazyme` in dbcanlight) and substrate detection
-mode(`--tools dbcansub` in run_dbcan and `-m sub` in dbcanlight). All tests were run on the same machine with 8 cpus.
+
+The protein fasta from Fusarium falciforme genome assembly [ASM2687354v1] (RefSeq: [GCF_026873545.1]), which contains 14,574 sequences
+(8.1 MB in size) was used for performance and multithreading test. 3 rounds of test were run on cazyme and substrate detection
+mode (`--tools hmmer dbcansub` in run_dbcan and `-m cazyme` and `-m sub` in dbcanlight). The performance tests were all run on the
+same machine with 8 cpus and 48 GB pre-allocated RAM and the multithreading tests were run on 1, 2, 4, 8 and 16 cpus with 32 GB
+pre-allocated RAM. Both run with default blocksize (100,000). The performance tests show that the dbcanlight is approximately 3X
+faster than run_dbcan with acceptable 2 GB of RAM usage. The multithreading tests show that 4 or 8 cpus might be the most
+efficient configuration since the RAM usage is growing dramatically when using more than 8 cpus but doesn't speed up that much
+anymore.
 
 ![performance](misc/performance_comparison.svg)
+![memory_by_threads](misc/memory_peak_by_threads.svg)
 
-The memory usage test was done on a protein fasta predicted by Prodigal with 471,613 sequences. (168 MB in size). 3 rounds of test
-were done on cazyme detection mode (`-m cazyme` in dbcanlight) with different blocksizes. All tests were run on the same machine
-with 8 cpus. The result shows that process the sequences in batch is able to limit the memory consumption but do not affect the
-speed.
 
-![Memory](misc/performance_blocksize.svg)
+In order to get more details on RAM usage, we used another larger protein fasta downloaded from JGI (project ID: [Gp0071737]; IMG
+data: 43891.assembled.faa can be downloaded from [JGI data portal][JGI_data_portal]), which contains 388,021 sequences (59 MB in
+size). 3 rounds of test were run on cazyme and substrate detection mode (`-m cazyme` and `-m sub` in dbcanlight) with different
+blocksizes. All tests were run on the same machine with 8 cpus and 48 GB pre-allocated RAM. The result shows that process the
+sequences in batch is able to limit the memory consumption but do not affect the speed too much when blocksize is set as 10,000.
 
-## Notes
-
-Although hmmscan and hmmsearch are doing the same thing, the results may differ a bit since the evalue would be affected by the
-size of the database.
+![memory_footprint](misc/memory_footprint.svg)
 
 [Bioconda]: https://anaconda.org/bioconda/dbcanlight
 [Biopython]: https://biopython.org/
@@ -240,3 +243,7 @@ size of the database.
 [pytest-cov]: https://pytest-cov.readthedocs.io/en/stable/
 [python]: https://www.python.org/
 [run_dbcan]: https://github.com/linnabrown/run_dbcan
+[ASM2687354v1]: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_026873545.1/
+[GCF_026873545.1]: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/026/873/545/GCF_026873545.1_ASM2687354v1/
+[Gp0071737]: https://gold.jgi.doe.gov/project?id=Gp0071737
+[JGI_data_portal]: https://files.jgi.doe.gov/search/?q=Grassland+Soil+Metagenome+09_27_2013_1_40cm
