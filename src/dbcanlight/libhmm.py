@@ -89,7 +89,7 @@ def _load_seqs_and_hmmsearch(
     blocksize: int = 100000,
 ) -> Generator[dict[str, list[list]], None, None]:
     """Load query sequences and run hmmsearch by batch."""
-    blocksize == blocksize or None
+    blocksize = blocksize or None
     with pyhmmer.easel.SequenceFile(input, digital=True) as seq_file:
         for batch in itertools.count():
             seq_block = seq_file.read_block(sequences=blocksize)

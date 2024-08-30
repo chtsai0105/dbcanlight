@@ -44,7 +44,7 @@ class CustomHelpFormatter(argparse.HelpFormatter):
 def check_db(*dbs: Path) -> None:
     """A decorator to check whether the databases are exist."""
 
-    def decorator(func):
+    def decorator(func: Callable):
         """The actual decorator function that wraps the class method."""
 
         @wraps(func)

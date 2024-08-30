@@ -65,8 +65,8 @@ def search(
     Use "cazyme" mode to report the CAZyme families predicted by HMM; "sub" mode to report the potential substrates; and "diamond"
     mode to report the CAZyme families predicted by DIAMOND. (--tools hmmer/dbcansub/diamond in the original run_dbcan)
     """
-    if mode != "diamond" and blocksize < 1:
-        raise ValueError(f"blocksize={blocksize} which is smaller than 1.")
+    if mode != "diamond" and blocksize < 0:
+        raise ValueError(f"blocksize={blocksize} which is smaller than 0.")
     if mode == "cazyme":
         evalue = 1e-15 if evalue == "AUTO" else evalue
         results = cazyme_search(
@@ -141,8 +141,8 @@ def conclude(output: str | Path, **kwargs) -> None:
 
                     [results[gene][mode].add(fam) for fam in fams]
                     if mode == "sub":
-                        [results[gene]["ec"].add(ec) for ec in ecs]
-                        [results[gene]["substrate"].add(sub) for sub in subs]
+                        [results[gene]["ec"].add(ec) for ec in ecs if ec != "-"]
+                        [results[gene]["substrate"].add(sub) for sub in subs if sub != "-"]
             avail_results += 1
         else:
             logger.warning(f"Results from {mode} mode not exists.")
