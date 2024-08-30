@@ -73,8 +73,8 @@ class TestSearch:
 
     @pytest.mark.parametrize("mode", ("cazyme", "sub"))
     def test_search_valueerror(self, tmp_path: Path, mode: str):
-        with pytest.raises(ValueError, match=r"blocksize=\d+ which is smaller than 1."):
-            search(self.input, tmp_path, mode=mode, blocksize=0)
+        with pytest.raises(ValueError, match=r"blocksize=.+ which is smaller than 0."):
+            search(self.input, tmp_path, mode=mode, blocksize=-1)
 
     def test_search_keyerror(self, tmp_path: Path):
         with pytest.raises(KeyError, match=r".+ is not an available mode."):
