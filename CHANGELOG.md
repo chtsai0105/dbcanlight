@@ -7,6 +7,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.0] - 2024-08-30
+
 ### Added
 
 - Diamond as the third tool for prediction.
@@ -44,18 +46,24 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Implement cazyme and substrate detection with multi-threads supported hmmsearch from pyhmmer.
 
 - Companion commands dbcanLight-hmmparser
-  ([hmmsearch_parser.py](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/hmmsearch_parser.py)) helps to
+  ([hmmsearch\_parser.py](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/hmmsearch_parser.py)) helps to
   convert conventional hmmer3 output to dbcan format and dbcanLight-subparser
-  ([substrate_parser.py](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/substrate_parser.py)) helps to map to
+  ([substrate\_parser.py](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/substrate_parser.py)) helps to map to
   the potential substrate (require to search against the [substrate hmm
   profile](https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm)).
 
 - Rewrite the hmmsearch filtering codes initially written in Perl by Yanbin Yin@NIU to a Python function
-  [overlap_filter](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/hmmsearch_parser.py#L78-L110) under
-  hmmsearch_parser.py.
+  [overlap\_filter](https://github.com/chtsai0105/dbcanLight/blob/v1.0.0/src/dbcanlight/hmmsearch_parser.py#L78-L110) under
+  hmmsearch\_parser.py.
 
 - Process and filter hmmsearch hits on-the-fly to prevent the out-of-memory issue for large input files.
 
-[1.0.2]: https://github.com/chtsai0105/dbcanLight/compare/v1.0.1...v1.0.2
-[1.0.1]: https://github.com/chtsai0105/dbcanLight/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/chtsai0105/dbcanLight/releases/tag/v1.0.0
+[Unreleased]: https://github.com/chtsai0105/dbcanlight/compare/v1.1.0...HEAD
+
+[1.1.0]: https://github.com/chtsai0105/dbcanlight/compare/v1.0.2...v1.1.0
+
+[1.0.2]: https://github.com/chtsai0105/dbcanlight/compare/v1.0.1...v1.0.2
+
+[1.0.1]: https://github.com/chtsai0105/dbcanlight/compare/v1.0.0...v1.0.1
+
+[1.0.0]: https://github.com/chtsai0105/dbcanlight/releases/tag/v1.0.0
