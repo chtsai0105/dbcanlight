@@ -8,13 +8,13 @@ from typing import Generator
 
 import pyhmmer
 
-from . import _config, logger
-from ._utils import check_db
+from . import DB_PATH, logger
+from ._utils import CheckDB
 from .hmmsearch_parser import overlap_filter
 from .substrate_parser import substrate_mapping
 
 
-@check_db(_config.db_path.cazyme_hmms)
+@CheckDB(DB_PATH["cazyme_hmms"])
 def cazyme_search(
     input: str | Path,
     hmms: str | Path,
@@ -25,10 +25,10 @@ def cazyme_search(
     blocksize: int = 100000,
 ) -> Generator[list, None, None]:
     """Function for cazyme hmmsearch. Returns a generator of list of results."""
-    return _hmmsearch_pipeline(Path(input), Path(hmms), evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize)
+    return _search_pipeline(Path(input), Path(hmms), evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize)
 
 
-@check_db(_config.db_path.subs_hmms, _config.db_path.subs_mapper)
+@CheckDB(DB_PATH["subs_hmms"], DB_PATH["subs_mapper"])
 def subs_search(
     input: str | Path,
     hmms: str | Path,
@@ -40,11 +40,18 @@ def subs_search(
 ) -> Generator[list, None, None]:
     """Function for substrate hmmsearch. Returns a generator of list of results."""
     return substrate_mapping(
-        _hmmsearch_pipeline(Path(input), Path(hmms), evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize)
+        _search_pipeline(Path(input), Path(hmms), evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize)
     )
 
 
-def _hmmsearch_pipeline(
+def press_hmms(hmm_file: Path) -> None:
+    """Press hmm into a database."""
+    hmms = _load_hmms(hmm_file)
+    logger.debug(f"Pressing {hmm_file}...")
+    pyhmmer.hmmpress(hmms, hmm_file)
+
+
+def _search_pipeline(
     input: Path,
     hmms: Path,
     *,
@@ -72,13 +79,6 @@ def _load_hmms(hmm_file: Path) -> list[pyhmmer.plan7.OptimizedProfile | pyhmmer.
     return list(f)
 
 
-def _press_hmms(hmm_file: Path) -> None:
-    """Press hmm into a database."""
-    hmms = _load_hmms(hmm_file)
-    logger.debug(f"Pressing {hmm_file}...")
-    pyhmmer.hmmpress(hmms, hmm_file)
-
-
 def _load_seqs_and_hmmsearch(
     input: Path,
     hmms: list[pyhmmer.plan7.OptimizedProfile | pyhmmer.plan7.HMM],
@@ -97,12 +97,12 @@ def _load_seqs_and_hmmsearch(
                 break
             if blocksize:
                 logger.debug(f"Hmmsearch on sequence {batch * blocksize + 1}-{batch * blocksize + len(seq_block)}...")
-            yield _run_hmmsearch(seq_block, hmms, evalue=evalue, coverage=coverage, threads=threads)
+            yield _hmmsearch(seq_block, hmms, evalue=evalue, coverage=coverage, threads=threads)
 
 
-def _run_hmmsearch(
+def _hmmsearch(
     sequences: pyhmmer.easel.SequenceBlock,
-    hmms: list[pyhmmer.plan7.OptimizedProfile | pyhmmer.plan7.HMM],
+    hmms: pyhmmer.plan7.OptimizedProfile | list[pyhmmer.plan7.HMM],
     *,
     evalue: float = 1e-15,
     coverage: float = 0.35,
@@ -111,8 +111,8 @@ def _run_hmmsearch(
     """Run hmmsearch."""
     results = {}
     for hits in pyhmmer.hmmsearch(hmms, sequences, cpus=threads):
-        cog = hits.query_name.decode()
-        cog_length = hits.query_length
+        cog = hits.query.name.decode()
+        cog_length = hits.query.M
         for hit in hits:
             for domain in hit.domains:
                 hmm_from = domain.alignment.hmm_from

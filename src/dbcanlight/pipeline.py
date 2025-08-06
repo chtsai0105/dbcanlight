@@ -3,49 +3,55 @@
 from __future__ import annotations
 
 import csv
+import hashlib
+import os
 import re
-import tempfile
-from multiprocessing.dummy import Pool as ThreadPool
 from pathlib import Path
 from typing import Generator
 
-from . import _config, logger
-from ._utils import download, writer
-from .libdiamond import diamond_build, diamond_search
-from .libhmm import _press_hmms, cazyme_search, subs_search
+from ._header import Headers
+
+from . import AVAIL_MODES, CFG_DIR, DB_PATH, _libbuild, logger
+from ._utils import fetch_database_metadata, writer
+from .libdiamond import diamond_search
+from .libhmm import cazyme_search, subs_search
 
 
-def build(threads: int = 1, **kwargs) -> None:
+def build(force: bool = False, threads: int = 1, **kwargs) -> None:
     """
     Download and build the required databases.
 
     Clear the database files that already exist in the config folder. (~/.dbcanlight) Download from the dbcan website and use
     hmmpress to build the databases for hmm profile. Use the threads option to download parallelly.
     """
+    if not os.access(CFG_DIR, os.W_OK):
+        raise PermissionError(f"The config folder {CFG_DIR} is not writable.")
+
     if threads > 4:
-        logger.warning("Specified more than 4 CPUs. Will only use 4 at most.")
+        logger.warning("Specified more than 4 CPUs. Use only 4 at most.")
         threads = 4
 
-    if any(_config.cfg_dir.iterdir()):
-        logger.debug("Remove old database files.")
-        for file in _config.cfg_dir.iterdir():
-            file.unlink()
+    db_urls = fetch_database_metadata()
 
-    tempdir = tempfile.TemporaryDirectory()
-    dest_dirs = (_config.cfg_dir,) * 3 + (Path(tempdir.name),)
-    try:
-        with ThreadPool(threads) as pool:
-            pool.starmap(
-                download, [(url, dest_dir, file) for (url, file), dest_dir in zip(_config.databases_url.values(), dest_dirs)]
-            )
-        cazydb_fa = Path(tempdir.name) / _config.databases_url["diamond"][1]
-        diamond_build(cazydb_fa, _config.db_path.diamond, threads=threads)
-    finally:
-        tempdir.cleanup()
+    logger.info("Checking databases...")
+    for dbname, db_file in DB_PATH.items():
+        print(dbname, end=" ", flush=True)
+        if dbname == "diamond":
+            filepath = CFG_DIR / "cazydb.fa"
+        else:
+            filepath = db_file
 
-    logger.info("Running hmmpress...")
-    for hmm_file in _config.cfg_dir.glob("*.hmm"):
-        _press_hmms(hmm_file)
+        if force:
+            print("force rebuild")
+        elif not db_file.is_file():
+            print("not found")
+        elif hashlib.md5(open(filepath, "rb").read()).hexdigest() != db_urls[dbname][1]:
+            print("update required")
+        else:
+            print("ok")
+            continue
+        logger.info("Downloading %s from %s...", filepath, db_urls[dbname][0])
+        getattr(_libbuild, dbname)(db_urls[dbname][0], filepath, threads=threads)
 
 
 def search(
@@ -70,13 +76,11 @@ def search(
     if mode == "cazyme":
         evalue = 1e-15 if evalue == "AUTO" else evalue
         results = cazyme_search(
-            input, _config.db_path.cazyme_hmms, evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize
+            input, DB_PATH["cazyme_hmms"], evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize
         )
     elif mode == "sub":
         evalue = 1e-15 if evalue == "AUTO" else evalue
-        results = subs_search(
-            input, _config.db_path.subs_hmms, evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize
-        )
+        results = subs_search(input, DB_PATH["subs_hmms"], evalue=evalue, coverage=coverage, threads=threads, blocksize=blocksize)
     elif mode == "diamond":
         if abs(blocksize) > 0:
             logger.warning('Parameter "blocksize" is not applicable on diamond.')
@@ -84,8 +88,8 @@ def search(
         results = diamond_search(input, evalue=evalue, coverage=coverage, threads=threads)
     else:
         raise KeyError(f"{mode} is not an available mode.")
-    header = getattr(_config.headers, mode)
-    output = Path(output) / _config.avail_modes[mode]
+    header = getattr(Headers, mode)
+    output = Path(output) / AVAIL_MODES[mode]
 
     return writer(results, output, header=header)
 
@@ -107,7 +111,7 @@ def conclude(output: str | Path, **kwargs) -> None:
         for gene in results:
             tools_count = 0
             line = [gene, "+".join(x for x in sorted(results[gene]["ec"])) if results[gene]["ec"] else "-"]
-            for mode in _config.avail_modes.keys():
+            for mode in AVAIL_MODES.keys():
                 if mode == "cazyme":
                     fam = sorted(results[gene][mode], key=sort_helper)
                 else:
@@ -123,7 +127,7 @@ def conclude(output: str | Path, **kwargs) -> None:
 
     results = {}
     avail_results = 0
-    for mode, file_name in _config.avail_modes.items():
+    for mode, file_name in AVAIL_MODES.items():
         file_path = Path(output) / file_name
         if file_path.is_file():
             logger.info(f"Processing {file_path}...")
@@ -137,7 +141,7 @@ def conclude(output: str | Path, **kwargs) -> None:
                         gene, fams, ecs, subs = line[5], [line[0]], line[2].split("|"), line[3].split(",")
                     elif mode == "diamond":
                         gene, fams = line[0], line[1].split("|")[1:]
-                    results.setdefault(gene, {r: set() for r in tuple(_config.avail_modes.keys()) + ("ec", "substrate")})
+                    results.setdefault(gene, {r: set() for r in tuple(AVAIL_MODES.keys()) + ("ec", "substrate")})
 
                     [results[gene][mode].add(fam) for fam in fams]
                     if mode == "sub":
@@ -150,4 +154,4 @@ def conclude(output: str | Path, **kwargs) -> None:
         raise RuntimeError(f"Required at least 2 results to conclude but got {avail_results}. Aborted.")
     results = summarize(results)
 
-    return writer(results, Path(output) / "overview.tsv", header=_config.headers.overview)
+    return writer(results, Path(output) / "overview.tsv", header=Headers.overview)

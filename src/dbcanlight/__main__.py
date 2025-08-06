@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import argparse
 
-from . import __author__, __entry_points__, __version__, _config
-from ._utils import CustomHelpFormatter, args_parser
+from . import AUTHOR, AVAIL_CPUS, AVAIL_MODES, ENTRY_POINTS, VERSION
+from ._args_parser import CustomHelpFormatter, args_parser
 from .pipeline import build, conclude, search
 
 
@@ -21,13 +21,17 @@ def _menu_build(
         help="Download and build the required databases",
         description=build.__doc__,
     )
-    # p_build.add_argument("output", type=str, help="update")
+    p_build.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="Force to rebuild the databases.",
+    )
     p_build.add_argument(
         "-t",
         "--threads",
-        metavar="int",
         type=int,
-        default=_config.avail_cpus if _config.avail_cpus <= 4 else 4,
+        default=AVAIL_CPUS if AVAIL_CPUS <= 4 else 4,
         help="Number of cpu to use. Will use at most 4 CPUs even if more are specified",
     )
     p_build.set_defaults(func=build)
@@ -47,7 +51,7 @@ def _menu_search(
     p_search.add_argument("-i", "--input", metavar="file", type=str, required=True, help="Plain or gzipped protein fasta")
     p_search.add_argument("-o", "--output", metavar="directory", type=str, default=".", help="Output directory")
     p_search.add_argument(
-        "-m", "--mode", choices=_config.avail_modes.keys(), required=True, help="Search against cazyme or substrate database"
+        "-m", "--mode", choices=AVAIL_MODES.keys(), required=True, help="Search against cazyme or substrate database"
     )
     p_search.add_argument(
         "-e",
@@ -57,7 +61,7 @@ def _menu_search(
         help="Evalue cutoff. Use 1e-15 for hmmsearch and 1e-102 for diamond when specifying AUTO (default: AUTO)",
     )
     p_search.add_argument("-c", "--coverage", metavar="float", type=float, default=0.35, help="Coverage cutoff")
-    p_search.add_argument("-t", "--threads", metavar="int", type=int, default=_config.avail_cpus, help="Number of CPU to use")
+    p_search.add_argument("-t", "--threads", metavar="int", type=int, default=AVAIL_CPUS, help="Number of CPU to use")
     p_search.add_argument(
         "-b",
         "--blocksize",
@@ -88,7 +92,7 @@ def _menu_conclude(
 
 def _menu(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     """Menu for this entry point."""
-    parser.add_argument("-V", "--version", action="version", version=__version__)
+    parser.add_argument("-V", "--version", action="version", version=VERSION)
 
     subparsers = parser.add_subparsers(title="Modules", metavar="")
 
@@ -111,7 +115,8 @@ def main(args: list[str] | None = None) -> int:
     dbcan website. The search module searches against protein HMM, substrate HMM or diamond databases and reports the hits
     separately. The conclude module gathers all the results made by each module and reports a brief overview.
     """
-    return args_parser(_menu, args, prog=__entry_points__[__name__], description=main.__doc__, epilog=f"Written by {__author__}")
+
+    return args_parser(_menu, args, prog=ENTRY_POINTS[__name__], description=main.__doc__, epilog=f"Written by {AUTHOR}")
 
 
 if __name__ == "__main__":

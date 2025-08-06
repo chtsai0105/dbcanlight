@@ -9,18 +9,22 @@ import re
 from pathlib import Path
 from typing import Generator, Iterator, Sequence
 
-from . import __entry_points__, __version__, _config
-from ._utils import args_parser, check_db, writer
+from ._header import Headers
+
+from ._args_parser import args_parser
+
+from . import ENTRY_POINTS, VERSION, DB_PATH
+from ._utils import CheckDB, writer
 from .hmmsearch_parser import HmmsearchParser
 
 
-@check_db(_config.db_path.subs_mapper)
+@CheckDB(DB_PATH["subs_mapper"])
 def substrate_mapping(results: Sequence[list] | Iterator[list]) -> Generator[list, None, None]:
     """Map the hmm profiles to the corresponding substrates."""
 
     def get_subs_dict() -> dict[set]:
         subs_dict = {}
-        with open(_config.db_path.subs_mapper) as f:
+        with open(DB_PATH["subs_mapper"]) as f:
             next(f, None)
             for line in csv.reader(f, delimiter="\t"):
                 subs = set(re.split(r",[\s]|,", re.sub(r",[\s]and|[\s]and", ",", line[0])))
@@ -33,7 +37,7 @@ def substrate_mapping(results: Sequence[list] | Iterator[list]) -> Generator[lis
     subs_dict = get_subs_dict()
 
     for line in results:
-        if line == _config.headers.cazyme:
+        if line == Headers.cazyme:
             continue
         subfam = None
         sub_composition = []
@@ -81,14 +85,14 @@ def main(args: list[str] | None = None) -> int:
 
     *2 - dbcan substrate mapping table: http://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08252022.tsv
     """
-    return args_parser(_menu, args, prog=__entry_points__[__name__], description=main.__doc__)
+    return args_parser(_menu, args, prog=ENTRY_POINTS[__name__], description=main.__doc__)
 
 
 def _run(input: str | Path, output: str | Path, **kwargs) -> None:
     """Process the data."""
     data_parser = HmmsearchParser(input)
     results = substrate_mapping(data_parser.data)
-    writer(results, Path(output), header=_config.headers.sub)
+    writer(results, Path(output), header=Headers.sub)
 
 
 def _menu(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
@@ -96,7 +100,7 @@ def _menu(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument("-i", "--input", type=Path, required=True, help="dbcan-sub search output in dbcan format")
     parser.add_argument("-o", "--output", metavar="file", default="./substrates.tsv", help="Output file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
-    parser.add_argument("-V", "--version", action="version", version=__version__)
+    parser.add_argument("-V", "--version", action="version", version=VERSION)
     parser.set_defaults(func=_run)
 
     return parser

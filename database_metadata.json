@@ -1,0 +1,18 @@
+{
+    "cazyme_hmms": [
+        "https://bcb.unl.edu/dbCAN2/download/Databases/V13/dbCAN-HMMdb-V13.txt",
+        "78a532664c5dc312fe7e6d15dfda49b6"
+    ],
+    "subs_hmms": [
+        "https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN_sub.hmm",
+        "5f8ff66afc02be20510f973e50b32fa9"
+    ],
+    "subs_mapper": [
+        "https://bcb.unl.edu/dbCAN2/download/Databases/fam-substrate-mapping-08012023.tsv",
+        "513f7462596d188b91066280b70372aa"
+    ],
+    "diamond": [
+        "https://bcb.unl.edu/dbCAN2/download/Databases/V13/CAZyDB.07142024.fa",
+        "dcae60e400ea25d8db88babca2dde111"
+    ]
+}

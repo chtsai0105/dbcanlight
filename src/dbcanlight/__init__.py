@@ -1,13 +1,10 @@
 """Required actions when initiating the package."""
 
-try:
-    from importlib_metadata import entry_points, metadata
-except ImportError:
-    from importlib.metadata import entry_points, metadata
-
 import logging
-
-from . import _config
+import os
+from importlib.metadata import entry_points, metadata
+from pathlib import Path
+from typing import Literal
 
 
 def _map_entry_point_module(project_name):
@@ -19,14 +16,29 @@ def _map_entry_point_module(project_name):
     return d
 
 
-_meta = metadata("dbcanlight")
-__version__ = _meta["Version"]
-__author__ = _meta["Author-email"]
-__entry_points__ = _map_entry_point_module(_meta["Name"])
-
 # Create logger for the package
 logger = logging.basicConfig(format="%(asctime)s %(name)s %(levelname)s %(message)s", level="INFO")
 logger = logging.getLogger(__name__)
 
-# Create config folder in $HOME/.dbcanlight
-_config.cfg_dir.mkdir(exist_ok=True)
+
+VERSION: str = metadata("dbcanlight")["Version"]
+AUTHOR: str = metadata("dbcanlight")["Author-email"]
+ENTRY_POINTS: dict[str, str] = _map_entry_point_module(metadata("dbcanlight")["Name"])
+AVAIL_CPUS = int(os.environ.get("SLURM_CPUS_ON_NODE", os.cpu_count()))
+DATABASE_METADATA = "https://github.com/chtsai0105/dbcanlight/blob/main/database_metadata.json"
+
+_dbcanlight_db = os.getenv("DBCANLIGHT_DB")
+if _dbcanlight_db:
+    CFG_DIR = Path(_dbcanlight_db)
+else:
+    CFG_DIR: Path = Path.home() / ".dbcanlight"
+    CFG_DIR.mkdir(exist_ok=True)
+
+DB_PATH: dict[Literal["cazyme_hmms", "subs_hmms", "subs_mapper", "diamond"], Path] = {
+    "cazyme_hmms": CFG_DIR / "cazyme.hmm",
+    "subs_hmms": CFG_DIR / "substrate.hmm",
+    "subs_mapper": CFG_DIR / "substrate_mapping.tsv",
+    "diamond": CFG_DIR / "cazydb.dmnd",
+}
+
+AVAIL_MODES = {"cazyme": "cazymes.tsv", "sub": "substrates.tsv", "diamond": "diamond.tsv"}

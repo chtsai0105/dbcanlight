@@ -11,8 +11,11 @@ from typing import Generator, Iterator, Sequence
 
 from Bio import SearchIO
 
-from . import __entry_points__, __version__, _config, logger
-from ._utils import args_parser, writer
+from ._header import Headers
+
+from . import ENTRY_POINTS, VERSION, logger
+from ._args_parser import args_parser
+from ._utils import writer
 
 
 class HmmsearchParser:
@@ -151,7 +154,7 @@ def main(args: list[str] | None = None) -> int:
 
     *2 - domtblout format: hmmsearch output with --domtblout enabled
     """
-    return args_parser(_menu, args, prog=__entry_points__[__name__], description=main.__doc__)
+    return args_parser(_menu, args, prog=ENTRY_POINTS[__name__], description=main.__doc__)
 
 
 def _run(input: str | Path, output: str | Path, evalue: float = 1e-15, coverage: float = 0.35, **kwargs) -> None:
@@ -159,7 +162,7 @@ def _run(input: str | Path, output: str | Path, evalue: float = 1e-15, coverage:
     data_parser = HmmsearchParser(input)
     results = data_parser.eval_cov_filter(evalue=evalue, coverage=coverage)
     results = overlap_filter(results)
-    writer(results, Path(output), header=_config.headers.cazyme)
+    writer(results, Path(output), header=Headers.cazyme)
 
 
 def _menu(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
@@ -173,7 +176,7 @@ def _menu(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         "-c", "--coverage", metavar="float", type=float, default=0.35, help="Coverage cutoff (not applicable on diamond)"
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode for debug")
-    parser.add_argument("-V", "--version", action="version", version=__version__)
+    parser.add_argument("-V", "--version", action="version", version=VERSION)
     parser.set_defaults(func=_run)
 
     return parser
