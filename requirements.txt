@@ -1,2 +1,4 @@
 biopython>=1.81
+importlib-metadata; python_version<"3.10"
 pyhmmer>=0.11.0
+urllib3>=2.3.0
