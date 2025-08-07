@@ -1,10 +1,12 @@
 name: CD/version bump
-run-name: Version bump - ${{ github.event.inputs.version }} ${{ github.event.inputs.preid }}
+run-name: |
+  Version bump - ${{ github.event.inputs.bump_type }}
+  ${{ startsWith(github.event.inputs.bump_type, 'pre') && github.event.inputs.preid || '' }}
 
 on:
   workflow_dispatch:
     inputs:
-      version:
+      bump_type:
         description: "Version bump types"
         required: true
         type: choice
@@ -23,23 +25,20 @@ on:
 
 jobs:
   version_check:
-    name: Update Readme and Changelog
+    name: Update Changelog and citation
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          sparse-checkout: |
-            README.md
-            CHANGELOG.md
-          sparse-checkout-cone-mode: false
+          sparse-checkout: .
 
       - name: Bump changelog version
         uses: release-flow/keep-a-changelog-action@v3
         with:
           command: bump
-          version: ${{ github.event.inputs.version }}
+          version: ${{ github.event.inputs.bump_type }}
           preid: ${{ github.event.inputs.preid }}
           keep-unreleased-section: true
           fail-on-empty-release-notes: true
@@ -51,18 +50,33 @@ jobs:
           command: query
           version: latest
 
-      - name: Commit changes
+      - name: Edit CITATION.cff
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "actions@github.com"
-          git add .
-          git commit -m "Release v${{ steps.query-release-info.outputs.version }}"
+          VERSION=${{ steps.query-release-info.outputs.version }}
+          DATE=$(date -u +%Y-%m-%d)
 
-      - name: Push changes
-        run: git push
+          if [ -f CITATION.cff ]; then
+            sed -i "s/^version: .*/version: $VERSION/" CITATION.cff
+            sed -i "s/^date-released: .*/date-released: '$DATE'/" CITATION.cff
+          else
+            echo "CITATION.cff not found, skipping update."
+          fi
+
+      - name: Save cache to CHANGELOG.md and CITATION.cff
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            CHANGELOG.md
+            CITATION.cff
+          key: version-bump-v${{ steps.query-release-info.outputs.version }}-${{ github.run_id }}
 
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: release
-          client-payload: '{"bump_type": "${{ github.event.inputs.version }}"}'
+          client-payload: >-
+            {
+              "bump_type": "${{ github.event.inputs.bump_type }}",
+              "version": "${{ steps.query-release-info.outputs.version }}",
+              "run_id": ${{ github.run_id }}
+            }

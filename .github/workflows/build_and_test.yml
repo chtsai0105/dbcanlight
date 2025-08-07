@@ -14,18 +14,14 @@ jobs:
   build-diamond:
     uses: ./.github/workflows/build_diamond.yml
 
-  download-database:
-    needs: [build-diamond]
-    uses: ./.github/workflows/download_database_files.yml
-
   build-and-test:
     name: Build and test
     runs-on: ubuntu-latest
-    needs: [build-diamond, download-database]
+    needs: [build-diamond]
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - name: Checkout repository
@@ -52,23 +48,13 @@ jobs:
           python -m pip install flake8 pytest pytest-cov
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Lint with flake8
-        run: |
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 . --count --exit-zero --max-complexity=30 --max-line-length=130 --statistics --ignore=E203,W503,E402
+      - name: Lint with Ruff
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: "latest"
 
       - name: Install package
         run: pip install .
-
-      - name: Cache database files
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            ~/.dbcanlight/cazyme.hmm
-            ~/.dbcanlight/substrate_mapping.tsv
-            ~/.dbcanlight/substrate.hmm
-            ~/.dbcanlight/cazydb.dmnd
-          key: dbcanlight-databases
 
       - name: Cache diamond
         id: cache
@@ -79,11 +65,11 @@ jobs:
 
       - name: Test with pytest
         run: |
-          package_name=$(grep '^name = ' pyproject.toml | sed 's/name = "\(.*\)"/\1/' | tr -d '[:space:]')
-          pytest -vv --cov=$package_name --cov-report=xml --runslow
+          # package_name=$(grep '^name = ' pyproject.toml | sed 's/name = "\(.*\)"/\1/' | tr -d '[:space:]')
+          pytest -vv --cov-config=.coveragerc --cov-report=xml --runslow
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5.4.0
+        uses: codecov/codecov-action@v5.4.3
         with:
           flags: ${{ matrix.python }}
           env_vars: OS
