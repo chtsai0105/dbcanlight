@@ -35,7 +35,7 @@ dbcanlight-subparser = "dbcanlight.substrate_parser:main"
 dependencies = { file = ["requirements.txt"] }
 
 [tool.pytest_env]
-DBCANLIGHT_DB = { value = "{PWD}/tests/database", transform = true }
+DBCANLIGHT_DB = { value = "{PWD}/tests/databases", transform = true }
 
 [tool.pytest.ini_options]
 minversion = "8.0"

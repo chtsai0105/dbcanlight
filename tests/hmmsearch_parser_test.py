@@ -6,7 +6,7 @@ from typing import Generator
 import pytest
 
 import dbcanlight.hmmsearch_parser as hmmsearch_parser
-from dbcanlight import __version__
+from dbcanlight import VERSION
 from dbcanlight.hmmsearch_parser import HmmsearchParser, main, overlap_filter
 
 
@@ -73,7 +73,7 @@ def test_main_version(capsys: pytest.CaptureFixture):
     assert main(["--version"]) == main(["-V"])
     captured: str = capsys.readouterr().out
     captured = captured.split("\n")
-    assert captured[0] == captured[1] == __version__
+    assert captured[0] == captured[1] == VERSION
 
 
 @pytest.mark.parametrize(

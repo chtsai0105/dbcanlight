@@ -6,7 +6,7 @@ from typing import Generator
 import pytest
 
 import dbcanlight.substrate_parser as substrate_parser
-from dbcanlight import __version__
+from dbcanlight import VERSION
 from dbcanlight.substrate_parser import main, substrate_mapping
 
 
@@ -53,7 +53,7 @@ def test_main_version(capsys: pytest.CaptureFixture):
     assert main(["--version"]) == main(["-V"])
     captured: str = capsys.readouterr().out
     captured = captured.split("\n")
-    assert captured[0] == captured[1] == __version__
+    assert captured[0] == captured[1] == VERSION
 
 
 @pytest.mark.parametrize(
