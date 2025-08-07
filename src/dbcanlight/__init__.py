@@ -2,7 +2,11 @@
 
 import logging
 import os
-from importlib.metadata import entry_points, metadata
+
+try:
+    from importlib_metadata import entry_points, metadata
+except ImportError:
+    from importlib.metadata import entry_points, metadata
 from pathlib import Path
 from typing import Literal
 
