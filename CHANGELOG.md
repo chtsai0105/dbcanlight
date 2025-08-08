@@ -7,6 +7,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.1] - 2025-08-08
+
 ### Added
 
 - Show progress when downloading databases.
@@ -66,7 +68,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Process and filter hmmsearch hits on-the-fly to prevent the out-of-memory issue for large input files.
 
-[Unreleased]: https://github.com/chtsai0105/dbcanlight/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/chtsai0105/dbcanlight/compare/v1.1.1...HEAD
+
+[1.1.1]: https://github.com/chtsai0105/dbcanlight/compare/v1.1.0...v1.1.1
 
 [1.1.0]: https://github.com/chtsai0105/dbcanlight/compare/v1.0.2...v1.1.0
 
