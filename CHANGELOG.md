@@ -7,6 +7,14 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Show progress when downloading databases.
+
+### Changed
+
+- Build module now check the metadata and update the databases if needed.
+
 ## [1.1.0] - 2024-08-30
 
 ### Added
