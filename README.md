@@ -1,8 +1,9 @@
-[![Build](https://img.shields.io/github/actions/workflow/status/chtsai0105/dbcanlight/build_and_test.yml?branch=main&logo=github)](https://github.com/chtsai0105/dbcanlight/actions/workflows/build_and_test.yml)
-[![Bioconda](https://img.shields.io/conda/v/bioconda/dbcanlight?logo=anaconda&color=orange)][Bioconda]
-[![Python](https://img.shields.io/badge/python-3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11_%7C_3.12-blue?logo=python)](https://github.com/chtsai0105/dbcanlight/actions/workflows/build_and_test.yml)
+[![CI/build and test](https://github.com/chtsai0105/dbcanlight/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/chtsai0105/dbcanlight/actions/workflows/build_and_test.yml)
+[![Python](https://img.shields.io/badge/python-3.9_%7C_3.10_%7C_3.11_%7C_3.12_%7C_3.13-blue?logo=python)](https://github.com/chtsai0105/dbcanlight/actions/workflows/build_and_test.yml)
 [![codecov](https://codecov.io/gh/chtsai0105/dbcanlight/graph/badge.svg?token=XEBUU3BRRF)](https://codecov.io/gh/chtsai0105/dbcanlight)
 [![License](https://img.shields.io/github/license/chtsai0105/dbcanlight?label=license)](https://github.com/chtsai0105/dbcanlight/blob/main/LICENSE)
+[![Conda](https://anaconda.org/bioconda/dbcanlight/badges/version.svg)][Bioconda]
+[![Last updated](https://anaconda.org/bioconda/dbcanlight/badges/latest_release_date.svg)][Bioconda]
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13586882.svg)](https://doi.org/10.5281/zenodo.13586882)
 
 # dbcanlight
