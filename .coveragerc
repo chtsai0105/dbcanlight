@@ -5,11 +5,11 @@ source =
 [run]
 omit =
     **/__init__.py
-    **/_utils.py
+    tests/*.py
     **/_[^_]*.py
 
 [report]
 omit =
     **/__init__.py
-    **/_utils.py
+    tests/*.py
     **/_[^_]*.py
