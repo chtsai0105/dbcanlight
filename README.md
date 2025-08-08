@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/chtsai0105/dbcanlight?label=license)](https://github.com/chtsai0105/dbcanlight/blob/main/LICENSE)
 [![Conda](https://anaconda.org/bioconda/dbcanlight/badges/version.svg)][Bioconda]
 [![Last updated](https://anaconda.org/bioconda/dbcanlight/badges/latest_release_date.svg)][Bioconda]
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13586882.svg)](https://doi.org/10.5281/zenodo.13586882)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13586881.svg)](https://doi.org/10.5281/zenodo.13586881)
 
 # dbcanlight
 
