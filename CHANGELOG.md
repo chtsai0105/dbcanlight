@@ -7,6 +7,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The build module problem by amend the url for database json file.
+
 ## [1.1.1] - 2025-08-08
 
 ### Added

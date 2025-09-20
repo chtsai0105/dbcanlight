@@ -29,7 +29,7 @@ VERSION: str = metadata("dbcanlight")["Version"]
 AUTHOR: str = metadata("dbcanlight")["Author-email"]
 ENTRY_POINTS: dict[str, str] = _map_entry_point_module(metadata("dbcanlight")["Name"])
 AVAIL_CPUS = int(os.environ.get("SLURM_CPUS_ON_NODE", os.cpu_count()))
-DATABASE_METADATA = "https://github.com/chtsai0105/dbcanlight/blob/main/database_metadata.json"
+DATABASE_METADATA = "https://raw.githubusercontent.com/chtsai0105/dbcanlight/refs/heads/main/database_metadata.json"
 
 _dbcanlight_db = os.getenv("DBCANLIGHT_DB")
 if _dbcanlight_db:
